@@ -1,0 +1,36 @@
+[Breakpoint 0]
+Enabled=true
+File=LivecastConnection.cc
+Line=30
+Temporary=false
+
+[Breakpoint 1]
+Enabled=true
+File=LivecastConnection.cc
+Line=55
+Temporary=false
+
+[Breakpoint 2]
+Enabled=true
+File=livecast_monitor.cc
+Line=87
+Temporary=false
+
+[Breakpoint 3]
+Enabled=true
+File=Configuration.cc
+Line=22
+Temporary=false
+
+[General]
+DebuggerCmdStr=
+DriverName=GDB
+FileVersion=1
+OptionsSelected=
+ProgramArgs=--conf=livecast-monitor.conf
+TTYLevel=7
+WorkingDirectory=
+
+[Memory]
+ColumnWidths=80,0
+NumExprs=0
