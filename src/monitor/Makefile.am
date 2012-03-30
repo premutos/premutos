@@ -7,4 +7,5 @@ liblivecast_admin_monitor_la_CXXFLAGS = \
 liblivecast_admin_monitor_la_SOURCES = \
 	LivecastConnection.cc \
 	LivecastMonitor.cc \
-	MonitorConfiguration.cc
+	MonitorConfiguration.cc \
+	StreamInfos.cc

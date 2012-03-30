@@ -54,8 +54,8 @@ am_livecast_monitor_OBJECTS = livecast_monitor.$(OBJEXT) \
 livecast_monitor_OBJECTS = $(am_livecast_monitor_OBJECTS)
 livecast_monitor_DEPENDENCIES =  \
 	$(top_builddir)/src/lib/liblivecast-admin-lib.la \
-	$(top_builddir)/src/gui/liblivecast-admin-gui.la \
-	$(top_builddir)/src/monitor/liblivecast-admin-monitor.la
+	$(top_builddir)/src/monitor/liblivecast-admin-monitor.la \
+	$(top_builddir)/src/gui/liblivecast-admin-gui.la
 livecast_monitor_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(livecast_monitor_LDFLAGS) $(LDFLAGS) -o $@
@@ -252,8 +252,8 @@ livecast_monitor_SOURCES = \
 
 livecast_monitor_LDADD = \
 	$(top_builddir)/src/lib/liblivecast-admin-lib.la \
-	$(top_builddir)/src/gui/liblivecast-admin-gui.la \
 	$(top_builddir)/src/monitor/liblivecast-admin-monitor.la \
+	$(top_builddir)/src/gui/liblivecast-admin-gui.la \
 	-lboost_thread -lboost_system -lboost_program_options
 
 livecast_monitor_LDFLAGS = -pthread

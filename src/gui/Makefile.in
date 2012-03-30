@@ -49,9 +49,12 @@ CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 liblivecast_admin_gui_la_LIBADD =
 am_liblivecast_admin_gui_la_OBJECTS =  \
+	liblivecast_admin_gui_la-GuiConfiguration.lo \
 	liblivecast_admin_gui_la-LivecastControl.lo \
 	liblivecast_admin_gui_la-LivecastGui.lo \
-	liblivecast_admin_gui_la-LivecastResult.lo
+	liblivecast_admin_gui_la-LivecastResult.lo \
+	liblivecast_admin_gui_la-LivecastStatus.lo \
+	liblivecast_admin_gui_la-LivecastTaskBarIcon.lo
 liblivecast_admin_gui_la_OBJECTS =  \
 	$(am_liblivecast_admin_gui_la_OBJECTS)
 liblivecast_admin_gui_la_LINK = $(LIBTOOL) --tag=CXX \
@@ -212,9 +215,12 @@ liblivecast_admin_gui_la_CXXFLAGS = \
 	$(CXXFLAGS)
 
 liblivecast_admin_gui_la_SOURCES = \
+	GuiConfiguration.cc \
 	LivecastControl.cc \
 	LivecastGui.cc \
-	LivecastResult.cc
+	LivecastResult.cc \
+	LivecastStatus.cc \
+	LivecastTaskBarIcon.cc
 
 all: all-am
 
@@ -268,9 +274,12 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblivecast_admin_gui_la-GuiConfiguration.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblivecast_admin_gui_la-LivecastControl.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblivecast_admin_gui_la-LivecastGui.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblivecast_admin_gui_la-LivecastResult.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblivecast_admin_gui_la-LivecastStatus.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblivecast_admin_gui_la-LivecastTaskBarIcon.Plo@am__quote@
 
 .cc.o:
 @am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -293,6 +302,13 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LTCXXCOMPILE) -c -o $@ $<
 
+liblivecast_admin_gui_la-GuiConfiguration.lo: GuiConfiguration.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblivecast_admin_gui_la_CXXFLAGS) $(CXXFLAGS) -MT liblivecast_admin_gui_la-GuiConfiguration.lo -MD -MP -MF $(DEPDIR)/liblivecast_admin_gui_la-GuiConfiguration.Tpo -c -o liblivecast_admin_gui_la-GuiConfiguration.lo `test -f 'GuiConfiguration.cc' || echo '$(srcdir)/'`GuiConfiguration.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/liblivecast_admin_gui_la-GuiConfiguration.Tpo $(DEPDIR)/liblivecast_admin_gui_la-GuiConfiguration.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='GuiConfiguration.cc' object='liblivecast_admin_gui_la-GuiConfiguration.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblivecast_admin_gui_la_CXXFLAGS) $(CXXFLAGS) -c -o liblivecast_admin_gui_la-GuiConfiguration.lo `test -f 'GuiConfiguration.cc' || echo '$(srcdir)/'`GuiConfiguration.cc
+
 liblivecast_admin_gui_la-LivecastControl.lo: LivecastControl.cc
 @am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblivecast_admin_gui_la_CXXFLAGS) $(CXXFLAGS) -MT liblivecast_admin_gui_la-LivecastControl.lo -MD -MP -MF $(DEPDIR)/liblivecast_admin_gui_la-LivecastControl.Tpo -c -o liblivecast_admin_gui_la-LivecastControl.lo `test -f 'LivecastControl.cc' || echo '$(srcdir)/'`LivecastControl.cc
 @am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/liblivecast_admin_gui_la-LivecastControl.Tpo $(DEPDIR)/liblivecast_admin_gui_la-LivecastControl.Plo
@@ -313,6 +329,20 @@ liblivecast_admin_gui_la-LivecastResult.lo: LivecastResult.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='LivecastResult.cc' object='liblivecast_admin_gui_la-LivecastResult.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblivecast_admin_gui_la_CXXFLAGS) $(CXXFLAGS) -c -o liblivecast_admin_gui_la-LivecastResult.lo `test -f 'LivecastResult.cc' || echo '$(srcdir)/'`LivecastResult.cc
+
+liblivecast_admin_gui_la-LivecastStatus.lo: LivecastStatus.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblivecast_admin_gui_la_CXXFLAGS) $(CXXFLAGS) -MT liblivecast_admin_gui_la-LivecastStatus.lo -MD -MP -MF $(DEPDIR)/liblivecast_admin_gui_la-LivecastStatus.Tpo -c -o liblivecast_admin_gui_la-LivecastStatus.lo `test -f 'LivecastStatus.cc' || echo '$(srcdir)/'`LivecastStatus.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/liblivecast_admin_gui_la-LivecastStatus.Tpo $(DEPDIR)/liblivecast_admin_gui_la-LivecastStatus.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='LivecastStatus.cc' object='liblivecast_admin_gui_la-LivecastStatus.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblivecast_admin_gui_la_CXXFLAGS) $(CXXFLAGS) -c -o liblivecast_admin_gui_la-LivecastStatus.lo `test -f 'LivecastStatus.cc' || echo '$(srcdir)/'`LivecastStatus.cc
+
+liblivecast_admin_gui_la-LivecastTaskBarIcon.lo: LivecastTaskBarIcon.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblivecast_admin_gui_la_CXXFLAGS) $(CXXFLAGS) -MT liblivecast_admin_gui_la-LivecastTaskBarIcon.lo -MD -MP -MF $(DEPDIR)/liblivecast_admin_gui_la-LivecastTaskBarIcon.Tpo -c -o liblivecast_admin_gui_la-LivecastTaskBarIcon.lo `test -f 'LivecastTaskBarIcon.cc' || echo '$(srcdir)/'`LivecastTaskBarIcon.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/liblivecast_admin_gui_la-LivecastTaskBarIcon.Tpo $(DEPDIR)/liblivecast_admin_gui_la-LivecastTaskBarIcon.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='LivecastTaskBarIcon.cc' object='liblivecast_admin_gui_la-LivecastTaskBarIcon.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblivecast_admin_gui_la_CXXFLAGS) $(CXXFLAGS) -c -o liblivecast_admin_gui_la-LivecastTaskBarIcon.lo `test -f 'LivecastTaskBarIcon.cc' || echo '$(srcdir)/'`LivecastTaskBarIcon.cc
 
 mostlyclean-libtool:
 	-rm -f *.lo

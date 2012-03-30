@@ -21,9 +21,8 @@ AC_LANG_CPLUSPLUS
 AC_C_BIGENDIAN
 
 #
-#
-CFLAGS=-ggdb
-CXXFLAGS=-ggdb
+CFLAGS=
+CXXFLAGS=
 
 #
 #        
@@ -43,8 +42,8 @@ AC_ARG_WITH([memory-check],
             [])
 AC_ARG_ENABLE([debug], 
               AC_HELP_STRING([--enable-debug], [compile with debug option]), 
-              [CXXFLAGS="$CXXFLAGS -W -Wall -Werror -ggdb -O0 -D__DEBUG__ -DGLIBCXX_FORCE_NEW"], 
-              [CXXFLAGS="$CXXFLAGS -O2 -DNDEBUG"])
+              [CXXFLAGS="$CXXFLAGS -W -Wall -ggdb -O0 -D__DEBUG__ -DGLIBCXX_FORCE_NEW"], 
+              [CXXFLAGS="$CXXFLAGS -W -Wall -Werror -ggdb -O2 -DNDEBUG"])
 
 #
 # boost first
@@ -54,16 +53,15 @@ CFLAGS="$CFLAGS $BOOST_CFLAGS"
 LIBS="$LIBS $BOOST_LIBS"
 
 #
-# wx widget
-# CXXFGLAGS="wxgtk2-2.6-config --cflags"
-CXXFLAGS="$CXXFLAGS -I/usr/local/include/wx-2.6/gtk2-ansi-release-2.6 -I/usr/local/include/wx-2.6 -DGTK_NO_CHECK_CASTS -D__WXGTK__ -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES -DNO_GCC_PRAGMA"
-LIBS="$LIBS -L/usr/local/lib  -pthread -L/usr/local/lib -liconv   -lwx_gtk2_xrc-2.6 -lwx_gtk2_qa-2.6 -lwx_gtk2_html-2.6 -lwx_gtk2_adv-2.6 -lwx_gtk2_core-2.6 -lwx_base_xml-2.6 -lwx_base_net-2.6 -lwx_base-2.6"
-
-#
 # mysql
 AX_CHECK_MYSQL()
 CXXFLAGS="$CXXFLAGS $MYSQL_INCLUDE"
 LIBS="$LIBS $MYSQL_LIBS"
+
+#
+# wx widget
+CXXFLAGS="$CXXFLAGS -I/usr/local/lib/wx/include/gtk2-unicode-2.9/ -I/usr/local/include/wx-2.9/gtk2-ansi-release-2.9 -I/usr/local/include/wx-2.9 -DGTK_NO_CHECK_CASTS -D__WXGTK__ -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES -DNO_GCC_PRAGMA"
+LIBS="$LIBS -L/usr/local/lib -pthread -liconv -lwx_gtk2u_xrc-2.9 -lwx_gtk2u_qa-2.9 -lwx_gtk2u_html-2.9 -lwx_gtk2u_adv-2.9 -lwx_gtk2u_core-2.9 -lwx_baseu_xml-2.9 -lwx_baseu_net-2.9 -lwx_baseu-2.9"
 
 #
 # valgrind

@@ -59,33 +59,33 @@ Configuration::Configuration()
 {
 }
 
-void Configuration::load(std::istream& is)
+void Configuration::load(std::istream&)
 {
-  try
-  {
 
-    boost::property_tree::ptree ptree;
-    boost::property_tree::read_xml(is, ptree);
+//   try
+//   {
 
-    for (boost::property_tree::ptree::const_iterator it = ptree.get_child("servers").begin(); it != ptree.get_child("servers").end(); ++it)
-    {
-      std::string host = it->second.get<std::string>("host");
-      uint16_t port = it->second.get<int>("port");
-      std::string user = it->second.get<std::string>("user");
-      std::string pass = it->second.get<std::string>("pass");
-      LogError::getInstance().sysLog(DEBUG, "insert connection with values : [ host => '%s' ; port => '%d' ; user => '%s' ; pass => '%s' ] ", host.c_str(), port, user.c_str(), pass.c_str());
-      LivecastConnectionPtr connection(new LivecastConnection(this->monitor->getIOService(), this->resultCb, host, port, user, pass, this));
-      this->monitor->add(connection);    
-    }
-  }
-  catch (const std::exception& ex)
-  {
-    LogError::getInstance().sysLog(ERROR, "cannot parse servers configuration: %s", ex.what());
-  }
+//     boost::property_tree::ptree ptree;
+//     boost::property_tree::read_xml(is, ptree);
+
+//     for (boost::property_tree::ptree::const_iterator it = ptree.get_child("servers").begin(); it != ptree.get_child("servers").end(); ++it)
+//     {
+//       std::string host = it->second.get<std::string>("host");
+//       uint16_t port = it->second.get<int>("port");
+//       std::string user = it->second.get<std::string>("user");
+//       std::string pass = it->second.get<std::string>("pass");
+//       LogError::getInstance().sysLog(DEBUG, "insert connection with values : [ host => '%s' ; port => '%d' ; user => '%s' ; pass => '%s' ] ", host.c_str(), port, user.c_str(), pass.c_str());
+//       LivecastConnectionPtr connection(new LivecastConnection(this->monitor->getIOService(), this->resultCb, host, port, user, pass, this));
+//     }
+//   }
+//   catch (const std::exception& ex)
+//   {
+//     LogError::getInstance().sysLog(ERROR, "cannot parse servers configuration: %s", ex.what());
+//   }
 
   if (this->opts != 0)
   {
-    this->MonitorConfiguration::load(this->opts->dbHost.c_str(), this->opts->dbUser.c_str(), this->opts->dbPass.c_str(), this->opts->dbName.c_str(), this->opts->dbQuery.c_str());
+    this->MonitorConfiguration::loadStreamList();
   }
 }
 
@@ -112,7 +112,10 @@ void Configuration::parseOpts(int argc, char**argv)
       ("db-pass", po::value<std::string>(&this->opts->dbPass)->default_value(this->opts->dbPass), "set pass database")
       ("db-host", po::value<std::string>(&this->opts->dbHost)->default_value(this->opts->dbHost), "set host database")
       ("db-name", po::value<std::string>(&this->opts->dbName)->default_value(this->opts->dbName), "set name database")
-      ("db-query", po::value<std::string>(&this->opts->dbQuery)->default_value(this->opts->dbQuery), "set database query to load configuration")
+      ("db-query-stream", po::value<std::string>(&this->opts->dbQueryStream)->default_value(this->opts->dbQueryStream), "set database query to load stream informations")
+      ("db-query-stream-list", po::value<std::string>(&this->opts->dbQueryStreamList)->default_value(this->opts->dbQueryStreamList), "set database query to load stream list informations")
+      ("db-query-stream-profile", po::value<std::string>(&this->opts->dbQueryStreamProfile)->default_value(this->opts->dbQueryStreamProfile), "set database query to load stream profiles informations")
+      ("main-win-name", po::value<std::string>(&this->opts->mainWinName)->default_value(argv[0]), "set main window name")
       ("main-win-size", po::value<std::string>(&this->opts->mainWinSize), "set main window size")
       ("connection-timeout", po::value<unsigned int>(&this->opts->connectionTimeout)->default_value(this->opts->connectionTimeout), "server connection timeout in milliseconds")
       ("check-on-init", po::bool_switch(&this->opts->checkOnInit), "perform server check on initialisation")
@@ -167,4 +170,10 @@ void Configuration::parseOpts(int argc, char**argv)
     throw new BadProgramOptions;
   }
 
+}
+
+boost::shared_ptr<LivecastConnection> Configuration::createConnection(const std::string& host, uint16_t port) const
+{
+  LivecastConnectionPtr connection(new LivecastConnection(this->monitor->getIOService(), host, port, "tma", "k67bgt3b", this));
+  return connection;
 }

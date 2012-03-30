@@ -24,7 +24,8 @@ private:
 IMPLEMENT_APP(MyApp);
 
 MyApp::MyApp()
-  : cfg(new Configuration)
+  : cfg(new Configuration),
+    monitor(new LivecastMonitor(cfg))
 {
 }
 
@@ -43,11 +44,9 @@ bool MyApp::OnInit()
     return EXIT_FAILURE;
   }
   
-  this->gui.reset(new LivecastGui(wxT("livecast monitoring"), wxSize(this->cfg->getOpts()->hSize, this->cfg->getOpts()->vSize)));
-  this->monitor.reset(new LivecastMonitor(gui->getResultCallback()));
-  this->gui->setMonitor(monitor);
+  // this->monitor.reset(new LivecastMonitor(this->cfg));
+  this->gui.reset(new LivecastGui(this->cfg, this->monitor));
   this->cfg->setMonitor(monitor);
-  this->cfg->setResult(gui->getResultCallback());
 
   LogError::getInstance().sysLog(DEBUG, "%s", this->cfg->getOpts()->serversConf.c_str());
   std::ifstream f(this->cfg->getOpts()->serversConf.c_str());
@@ -56,6 +55,11 @@ bool MyApp::OnInit()
 
   boost::thread threadMonitor = boost::thread(boost::bind(&LivecastMonitor::run, monitor));
   gui->Show(true);
+
+  if (this->cfg->getOpts()->checkOnInit)
+  {
+    gui->refresh();
+  }
 
   return true;
 }

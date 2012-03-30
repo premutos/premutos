@@ -3,17 +3,21 @@
 
 #include <wx/wx.h>
 
+class LivecastGui;
+
 class LivecastControl : public wxPanel
 {
 public:
-  LivecastControl(wxPanel *parent);
+  LivecastControl(LivecastGui * livecastGui);
   ~LivecastControl();
 
-  wxPanel * parent;
-
 protected:
+  void OnRefresh(wxCommandEvent & event);
   void OnCheck(wxCommandEvent & event);
   void OnQuit(wxCommandEvent & event);
+
+private:
+  LivecastGui * const livecastGui;
 };
 
 #endif

@@ -5,6 +5,9 @@ liblivecast_admin_gui_la_CXXFLAGS = \
 	$(CXXFLAGS)
 
 liblivecast_admin_gui_la_SOURCES = \
+	GuiConfiguration.cc \
 	LivecastControl.cc \
 	LivecastGui.cc \
-	LivecastResult.cc
+	LivecastResult.cc \
+	LivecastStatus.cc \
+	LivecastTaskBarIcon.cc

@@ -1,0 +1,39 @@
+2012-03-30  Thomas Martinez  <thomas.martinez.07@gmail.com>
+
+	* src/livecast_monitor.cc,
+	  src/Configuration.cc,
+	  src/Configuration.hh,
+	  src/LivecastMonitorIntf.hh,
+	  src/Makefile.am,
+	  src/Makefile.in,
+	  src/ResultCallbackIntf.hh,
+	  src/gui/LivecastControl.cc,
+	  src/gui/LivecastControl.hh,
+	  src/gui/LivecastGui.cc,
+	  src/gui/LivecastGui.hh,
+	  src/gui/LivecastResult.cc,
+	  src/gui/LivecastResult.hh,
+	  src/gui/Makefile.am,
+	  src/gui/Makefile.in,
+	  src/livecast_monitor.cc,
+	  src/monitor/LivecastConnection.cc,
+	  src/monitor/LivecastConnection.hh,
+	  src/monitor/LivecastMonitor.cc,
+	  src/monitor/LivecastMonitor.hh,
+	  src/monitor/Makefile.am,
+	  src/monitor/Makefile.in,
+	  src/monitor/MonitorConfiguration.cc,
+	  src/monitor/MonitorConfiguration.hh:
+	New version, lots of changes
+	
+	* src/gui/GuiConfiguration.cc,
+	  src/gui/GuiConfiguration.hh,
+	  src/gui/LivecastStatus.cc,
+	  src/gui/LivecastStatus.hh,
+	  src/gui/LivecastTaskBarIcon.cc,
+	  src/gui/LivecastTaskBarIcon.hh,
+	  src/monitor/StreamInfos.cc,
+	  src/monitor/StreamInfos.hh: 
+	new Files
+
+

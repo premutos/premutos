@@ -51,7 +51,8 @@ liblivecast_admin_monitor_la_LIBADD =
 am_liblivecast_admin_monitor_la_OBJECTS =  \
 	liblivecast_admin_monitor_la-LivecastConnection.lo \
 	liblivecast_admin_monitor_la-LivecastMonitor.lo \
-	liblivecast_admin_monitor_la-MonitorConfiguration.lo
+	liblivecast_admin_monitor_la-MonitorConfiguration.lo \
+	liblivecast_admin_monitor_la-StreamInfos.lo
 liblivecast_admin_monitor_la_OBJECTS =  \
 	$(am_liblivecast_admin_monitor_la_OBJECTS)
 liblivecast_admin_monitor_la_LINK = $(LIBTOOL) --tag=CXX \
@@ -214,7 +215,8 @@ liblivecast_admin_monitor_la_CXXFLAGS = \
 liblivecast_admin_monitor_la_SOURCES = \
 	LivecastConnection.cc \
 	LivecastMonitor.cc \
-	MonitorConfiguration.cc
+	MonitorConfiguration.cc \
+	StreamInfos.cc
 
 all: all-am
 
@@ -271,6 +273,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblivecast_admin_monitor_la-LivecastConnection.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblivecast_admin_monitor_la-LivecastMonitor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblivecast_admin_monitor_la-MonitorConfiguration.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblivecast_admin_monitor_la-StreamInfos.Plo@am__quote@
 
 .cc.o:
 @am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -313,6 +316,13 @@ liblivecast_admin_monitor_la-MonitorConfiguration.lo: MonitorConfiguration.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='MonitorConfiguration.cc' object='liblivecast_admin_monitor_la-MonitorConfiguration.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblivecast_admin_monitor_la_CXXFLAGS) $(CXXFLAGS) -c -o liblivecast_admin_monitor_la-MonitorConfiguration.lo `test -f 'MonitorConfiguration.cc' || echo '$(srcdir)/'`MonitorConfiguration.cc
+
+liblivecast_admin_monitor_la-StreamInfos.lo: StreamInfos.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblivecast_admin_monitor_la_CXXFLAGS) $(CXXFLAGS) -MT liblivecast_admin_monitor_la-StreamInfos.lo -MD -MP -MF $(DEPDIR)/liblivecast_admin_monitor_la-StreamInfos.Tpo -c -o liblivecast_admin_monitor_la-StreamInfos.lo `test -f 'StreamInfos.cc' || echo '$(srcdir)/'`StreamInfos.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/liblivecast_admin_monitor_la-StreamInfos.Tpo $(DEPDIR)/liblivecast_admin_monitor_la-StreamInfos.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='StreamInfos.cc' object='liblivecast_admin_monitor_la-StreamInfos.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblivecast_admin_monitor_la_CXXFLAGS) $(CXXFLAGS) -c -o liblivecast_admin_monitor_la-StreamInfos.lo `test -f 'StreamInfos.cc' || echo '$(srcdir)/'`StreamInfos.cc
 
 mostlyclean-libtool:
 	-rm -f *.lo

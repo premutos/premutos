@@ -22,7 +22,6 @@ class LivecastConnection : public boost::enable_shared_from_this<LivecastConnect
 {
 public:
   LivecastConnection(boost::asio::io_service& io_service,
-                     boost::shared_ptr<ResultCallbackIntf> resultCb,
                      const std::string& host, 
                      const boost::uint16_t port,
                      const std::string& user,
@@ -30,7 +29,7 @@ public:
                      const MonitorConfiguration * const conf);
   ~LivecastConnection();
 
-  void check();
+  void check(unsigned int streamId, boost::shared_ptr<boost::property_tree::ptree> result);
 protected:
   void handleConnect(const boost::system::error_code& error);
   void handleTimeout(const boost::system::error_code& error);
@@ -42,9 +41,12 @@ private:
   boost::asio::deadline_timer deadline_timer;
   boost::asio::strand strand;
 
-  boost::shared_ptr<ResultCallbackIntf> resultCb;
+  unsigned int streamId;
+  boost::shared_ptr<boost::property_tree::ptree> result;
+
   boost::condition_variable cond;
-  boost::mutex mut;
+  boost::mutex checkMut;
+  boost::mutex syncMut;
   bool data_ready;
 
   const std::string host;
