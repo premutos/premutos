@@ -6,34 +6,40 @@
 #include <fstream>
 #include <boost/thread.hpp>
 
-class MyApp : public wxApp
+namespace livecast {
+
+class Livecast : public wxApp
 {
 public:
-  MyApp();
-  ~MyApp();
+  Livecast();
+  ~Livecast();
   virtual bool OnInit();
 
 private:
   boost::shared_ptr<Configuration::ProgramOption> parseProgramOptions();
 
   boost::shared_ptr<Configuration> cfg;
-  boost::shared_ptr<LivecastGui> gui;
-  boost::shared_ptr<LivecastMonitor> monitor;
+  boost::shared_ptr<monitor::LivecastMonitor> monitor;
+  boost::shared_ptr<gui::LivecastGui> gui;
 };
 
-IMPLEMENT_APP(MyApp);
+}
 
-MyApp::MyApp()
+using namespace livecast;
+
+IMPLEMENT_APP(Livecast);
+
+Livecast::Livecast()
   : cfg(new Configuration),
-    monitor(new LivecastMonitor(cfg))
+    monitor(new monitor::LivecastMonitor(cfg))
 {
 }
 
-MyApp::~MyApp()
+Livecast::~Livecast()
 {
 }
 
-bool MyApp::OnInit()
+bool Livecast::OnInit()
 {
   try
   {
@@ -44,16 +50,15 @@ bool MyApp::OnInit()
     return EXIT_FAILURE;
   }
   
-  // this->monitor.reset(new LivecastMonitor(this->cfg));
-  this->gui.reset(new LivecastGui(this->cfg, this->monitor));
-  this->cfg->setMonitor(monitor);
+  this->gui.reset(new gui::LivecastGui(cfg, monitor));
+  this->cfg->setMonitor(this->monitor);
 
   LogError::getInstance().sysLog(DEBUG, "%s", this->cfg->getOpts()->serversConf.c_str());
   std::ifstream f(this->cfg->getOpts()->serversConf.c_str());
   cfg->load(f);
   f.close();
 
-  boost::thread threadMonitor = boost::thread(boost::bind(&LivecastMonitor::run, monitor));
+  boost::thread threadMonitor = boost::thread(boost::bind(&monitor::LivecastMonitor::run, monitor));
   gui->Show(true);
 
   if (this->cfg->getOpts()->checkOnInit)

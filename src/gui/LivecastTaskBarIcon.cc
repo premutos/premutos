@@ -4,6 +4,10 @@
 
 #include <wx/menu.h>
 
+using namespace livecast;
+using namespace livecast::monitor;
+using namespace livecast::gui;
+
 LivecastTaskBarIcon::LivecastTaskBarIcon(LivecastGui * const livecastGui)
   : livecastGui(livecastGui)
 {

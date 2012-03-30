@@ -10,18 +10,21 @@
 #include <wx/wx.h>
 #include <boost/shared_ptr.hpp>
 
+namespace livecast {
+namespace gui {
+
 class LivecastGui;
 typedef boost::shared_ptr<LivecastGui> LivecastGuiPtr;
 
 class LivecastGui : public wxFrame
 {
 public:
-  LivecastGui(boost::shared_ptr<GuiConfiguration> cfg, boost::shared_ptr<LivecastMonitor> monitor);
+  LivecastGui(boost::shared_ptr<GuiConfiguration> cfg, boost::shared_ptr<livecast::monitor::LivecastMonitor> monitor);
   ~LivecastGui();
 
   void refresh();
   void check(unsigned int streamId = 0);
-  inline boost::shared_ptr<ResultCallbackIntf> getResultCallback() { return this->result; }
+  inline boost::shared_ptr<livecast::monitor::ResultCallbackIntf> getResultCallback() { return this->result; }
 private:
   void onCloseWindow(wxCloseEvent& ev);
   void onTaskBarLeftClick(wxTaskBarIconEvent& ev);
@@ -34,12 +37,14 @@ private:
   wxMenu *edit;
   wxMenu *help;
 
-  // boost::shared_ptr<LivecastTaskBarIcon> taskBar;
   LivecastTaskBarIcon * taskBar;
-  boost::shared_ptr<LivecastMonitor> monitor;
+  boost::shared_ptr<livecast::monitor::LivecastMonitor> monitor;
   boost::shared_ptr<GuiConfiguration> cfg;
   boost::shared_ptr<LivecastControl> control;
   boost::shared_ptr<LivecastResult> result;
 };
+
+}
+}
 
 #endif

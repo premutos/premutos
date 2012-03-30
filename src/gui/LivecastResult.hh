@@ -12,13 +12,16 @@
 #include <list>
 #include <boost/thread/mutex.hpp>
 
+namespace livecast {
+namespace gui {
+
 class LivecastGui;
 
 class LivecastResult : public wxPanel,
-                       public ResultCallbackIntf
+                       public livecast::monitor::ResultCallbackIntf
 {
 public:
-  LivecastResult(LivecastGui * livecastGui, boost::shared_ptr<LivecastMonitor> monitor);
+  LivecastResult(LivecastGui * livecastGui, boost::shared_ptr<livecast::monitor::LivecastMonitor> monitor);
   ~LivecastResult();
 
   void commitStreamList();
@@ -33,9 +36,9 @@ private:
   void onRefresh(wxCommandEvent& ev);
   void onStreamListDblClicked(wxListEvent& ev);
   void OnCloseLivecastStatus(wxCloseEvent& event);
-  void updateItem(MonitorConfiguration::map_streams_infos_t::const_iterator& it);
+  void updateItem(livecast::monitor::MonitorConfiguration::map_streams_infos_t::const_iterator& it);
 
-  boost::shared_ptr<LivecastMonitor> monitor;
+  boost::shared_ptr<livecast::monitor::LivecastMonitor> monitor;
 
   LivecastGui * livecastGui;
   wxListCtrl * list;
@@ -52,5 +55,8 @@ private:
   
   mutable boost::mutex mutex;
 };
+
+}
+}
  
 #endif

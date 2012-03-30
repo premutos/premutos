@@ -6,8 +6,10 @@
 #include "monitor/LivecastMonitor.hh"
 #include <sstream>
 
-class Configuration : public MonitorConfiguration,
-                      public GuiConfiguration
+namespace livecast {
+
+class Configuration : public monitor::MonitorConfiguration,
+                      public gui::GuiConfiguration
 {
 public:
 
@@ -48,7 +50,7 @@ public:
   void parseOpts(int argc, char**argv);
   void load(std::istream& is);
 
-  inline void setMonitor(boost::shared_ptr<LivecastMonitor> monitor) { this->monitor = monitor; }
+  inline void setMonitor(boost::shared_ptr<monitor::LivecastMonitor> monitor) { this->monitor = monitor; }
   inline const boost::shared_ptr<ProgramOption> getOpts() const { return this->opts; }
 
   // Monitor configuration interface
@@ -67,11 +69,13 @@ public:
   inline int getMainWinVSize() const { return this->opts->vSize; }
 
 protected:
-  boost::shared_ptr<LivecastConnection> createConnection(const std::string& host, uint16_t port) const;
+  boost::shared_ptr<monitor::LivecastConnection> createConnection(const std::string& host, uint16_t port) const;
 
 private:
-  boost::shared_ptr<LivecastMonitor> monitor;  
+  boost::shared_ptr<monitor::LivecastMonitor> monitor;  
   boost::shared_ptr<ProgramOption> opts;
 };
+
+}
 
 #endif

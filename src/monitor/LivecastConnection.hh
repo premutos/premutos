@@ -11,8 +11,8 @@
 #include <boost/asio/deadline_timer.hpp>
 #include <boost/thread/condition_variable.hpp>
 
-class LivecastConnection;
-typedef boost::shared_ptr<LivecastConnection> LivecastConnectionPtr;
+namespace livecast {
+namespace monitor {
 
 class LivecastConnectionException
 {
@@ -58,5 +58,8 @@ private:
   
   std::string resultString;
 };
+
+}
+}
 
 #endif

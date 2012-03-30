@@ -6,6 +6,10 @@
 
 #include <boost/property_tree/xml_parser.hpp>
 
+using namespace livecast;
+using namespace livecast::monitor;
+using namespace livecast::gui;
+
 LivecastStatus::LivecastStatus(LivecastResult * livecastResult, const std::string& windowName, boost::shared_ptr<StreamInfos> streamInfos)
   : wxFrame(livecastResult, 
             wxID_ANY, 

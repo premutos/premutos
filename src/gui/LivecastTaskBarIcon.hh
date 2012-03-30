@@ -3,6 +3,9 @@
 
 #include <wx/taskbar.h>
 
+namespace livecast {
+namespace gui {
+
 class LivecastGui;
 
 class LivecastTaskBarIcon : public wxTaskBarIcon
@@ -20,5 +23,8 @@ public:
 private:
   LivecastGui * const livecastGui;
 };
+
+}
+}
 
 #endif

@@ -3,6 +3,9 @@
 
 #include <wx/wx.h>
 
+namespace livecast {
+namespace gui {
+
 class LivecastGui;
 
 class LivecastControl : public wxPanel
@@ -19,5 +22,8 @@ protected:
 private:
   LivecastGui * const livecastGui;
 };
+
+}
+}
 
 #endif

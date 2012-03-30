@@ -2,6 +2,10 @@
 #include "LivecastGui.hh"
 #include "../lib/Log.hh"
 
+using namespace livecast;
+using namespace livecast::monitor;
+using namespace livecast::gui;
+
 LivecastControl::LivecastControl(LivecastGui * livecastGui)
   : wxPanel(livecastGui, 
             wxID_ANY, 

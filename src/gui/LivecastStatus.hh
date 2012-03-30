@@ -7,13 +7,16 @@
 #include <wx/treectrl.h>
 #include <boost/property_tree/ptree.hpp>
 
+namespace livecast {
+namespace gui {
+
 class LivecastResult;
 
 class LivecastStatus : public wxFrame,
-                       public ResultCallbackIntf
+                       public livecast::monitor::ResultCallbackIntf
 {
 public:
-  LivecastStatus(LivecastResult * livecastResult, const std::string& windowName, boost::shared_ptr<StreamInfos> streamInfos);
+  LivecastStatus(LivecastResult * livecastResult, const std::string& windowName, boost::shared_ptr<livecast::monitor::StreamInfos> streamInfos);
   ~LivecastStatus();
   
   void commitStreamList();
@@ -44,7 +47,10 @@ private:
   const wxEventType checkStreamEvent;  
   unsigned int streamId;
   LivecastResult * const livecastResult;
-  boost::shared_ptr<StreamInfos> streamInfos;
+  boost::shared_ptr<livecast::monitor::StreamInfos> streamInfos;
 };
+
+}
+}
 
 #endif

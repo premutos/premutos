@@ -5,6 +5,9 @@
 
 #include <boost/property_tree/xml_parser.hpp>
 
+namespace livecast {
+namespace gui {
+
 enum column_id_t
 {
   ID,
@@ -15,8 +18,9 @@ enum column_id_t
   BACKLOG,
 };
 
-std::ostream& operator<<(std::ostream& os, const StreamInfos::status_t status)
+std::ostream& operator<<(std::ostream& os, const livecast::monitor::StreamInfos::status_t status)
 {
+  using namespace livecast::monitor;
   switch (status)
   {
   case StreamInfos::STATUS_WAITING:      os << "WAITING";      break;
@@ -30,6 +34,13 @@ std::ostream& operator<<(std::ostream& os, const StreamInfos::status_t status)
   }
   return os;
 }
+
+}
+}
+
+using namespace livecast;
+using namespace livecast::monitor;
+using namespace livecast::gui;
 
 LivecastResult::LivecastResult(LivecastGui * livecastGui, boost::shared_ptr<LivecastMonitor> monitor)
   : wxPanel(livecastGui, 

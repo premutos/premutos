@@ -4,6 +4,9 @@
 #include <boost/bind.hpp>
 #include <boost/algorithm/string/erase.hpp>
 
+using namespace livecast;
+using namespace livecast::monitor;
+
 LivecastConnection::LivecastConnection(boost::asio::io_service& io_service,
                                        const std::string& host, 
                                        const boost::uint16_t port,

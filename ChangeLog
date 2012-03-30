@@ -1,5 +1,33 @@
 2012-03-30  Thomas Martinez  <thomas.martinez.07@gmail.com>
 
+	* configure.ac
+	  src/Configuration.cc,
+	  src/Configuration.hh,
+	  src/Makefile.am,
+	  src/ResultCallbackIntf.hh,
+	  src/gui/GuiConfiguration.cc,
+	  src/gui/GuiConfiguration.hh,
+	  src/gui/LivecastControl.cc,
+	  src/gui/LivecastControl.hh,
+	  src/gui/LivecastGui.cc,
+	  src/gui/LivecastGui.hh,
+	  src/gui/LivecastResult.cc,
+	  src/gui/LivecastResult.hh,
+	  src/gui/LivecastStatus.cc,
+	  src/gui/LivecastStatus.hh,
+	  src/gui/LivecastTaskBarIcon.cc,
+	  src/gui/LivecastTaskBarIcon.hh,
+	  src/livecast_monitor.cc,
+	  src/monitor/LivecastConnection.cc,
+	  src/monitor/LivecastConnection.hh,
+	  src/monitor/LivecastMonitor.cc,
+	  src/monitor/LivecastMonitor.hh,
+	  src/monitor/MonitorConfiguration.cc,
+	  src/monitor/MonitorConfiguration.hh,
+	  src/monitor/StreamInfos.cc,
+	  src/monitor/StreamInfos.hh:
+	Add namespace
+
 	* src/livecast_monitor.cc,
 	  src/Configuration.cc,
 	  src/Configuration.hh,

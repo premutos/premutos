@@ -11,6 +11,8 @@
 
 namespace po = boost::program_options;
 
+using namespace livecast;
+
 Configuration::ProgramOption::ProgramOption()
   : confFilename("/usr/local/etc/livecast-monitor.conf"),
     serversConf("/usr/local/etc/livecast-servers.conf"),
@@ -172,8 +174,8 @@ void Configuration::parseOpts(int argc, char**argv)
 
 }
 
-boost::shared_ptr<LivecastConnection> Configuration::createConnection(const std::string& host, uint16_t port) const
+boost::shared_ptr<monitor::LivecastConnection> Configuration::createConnection(const std::string& host, uint16_t port) const
 {
-  LivecastConnectionPtr connection(new LivecastConnection(this->monitor->getIOService(), host, port, "tma", "k67bgt3b", this));
+  boost::shared_ptr<monitor::LivecastConnection> connection(new monitor::LivecastConnection(this->monitor->getIOService(), host, port, "tma", "k67bgt3b", this));
   return connection;
 }

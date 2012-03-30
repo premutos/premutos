@@ -6,6 +6,9 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/array.hpp>
 
+namespace livecast {
+namespace monitor {
+
 class MonitorConfiguration;
 class LivecastConnection;
 
@@ -82,5 +85,8 @@ private:
   boost::property_tree::ptree resultTree;
   boost::array<boost::array<std::list<server_t>, 3>, 2> servers;
 };
+
+}
+}
 
 #endif

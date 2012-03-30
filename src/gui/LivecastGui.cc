@@ -1,7 +1,11 @@
 #include "LivecastGui.hh"
 #include "../lib/Log.hh"
 
-LivecastGui::LivecastGui(boost::shared_ptr<GuiConfiguration> cfg, boost::shared_ptr<LivecastMonitor> monitor)
+using namespace livecast;
+using namespace livecast::monitor;
+using namespace livecast::gui;
+
+LivecastGui::LivecastGui(boost::shared_ptr<GuiConfiguration> cfg, boost::shared_ptr<livecast::monitor::LivecastMonitor> monitor)
   : wxFrame(NULL, 
             wxID_ANY, 
             cfg->getMainWindowName(), 

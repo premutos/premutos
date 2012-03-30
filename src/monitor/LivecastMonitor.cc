@@ -4,6 +4,9 @@
 
 #include <boost/thread.hpp>
 
+using namespace livecast;
+using namespace livecast::monitor;
+
 LivecastMonitor::LivecastMonitor(boost::shared_ptr<MonitorConfiguration> cfg)
   : deadline_timer(io_service),
     cfg(cfg)

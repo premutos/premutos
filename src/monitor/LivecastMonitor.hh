@@ -2,7 +2,6 @@
 #define __LIVECAST_MONITOR_HH__
 
 #include "../ResultCallbackIntf.hh"
-#include "../LivecastMonitorIntf.hh"
 #include "LivecastConnection.hh"
 #include "MonitorConfiguration.hh"
 
@@ -11,7 +10,10 @@
 #include <boost/asio.hpp>
 #include <boost/asio/deadline_timer.hpp>
 
-class LivecastMonitor : public LivecastMonitorIntf
+namespace livecast {
+namespace monitor {
+
+class LivecastMonitor
 {
 public:
   LivecastMonitor(boost::shared_ptr<MonitorConfiguration> cfg);
@@ -34,5 +36,8 @@ private:
   boost::asio::deadline_timer deadline_timer;
   boost::shared_ptr<MonitorConfiguration> cfg;
 };
+
+}
+}
 
 #endif

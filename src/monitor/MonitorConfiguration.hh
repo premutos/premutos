@@ -8,6 +8,9 @@
 
 #include "StreamInfos.hh"
 
+namespace livecast {
+namespace monitor {
+
 class MonitorConfiguration
 {
 public:
@@ -48,5 +51,8 @@ private:
   port_to_server_t portsToServers;
   map_streams_infos_t streamsInfos;
 };
+
+}
+}
 
 #endif

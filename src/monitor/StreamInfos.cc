@@ -6,10 +6,19 @@
 #include <iostream>
 #include <boost/property_tree/xml_parser.hpp>
 
-bool operator==(const StreamInfos::server_t& s1, const StreamInfos::server_t& s2)
+namespace livecast {
+namespace monitor {
+
+bool operator==(const livecast::monitor::StreamInfos::server_t& s1, const livecast::monitor::StreamInfos::server_t& s2)
 {
   return (s1.host == s2.host) && (s1.port == s2.port);
 }
+
+}
+}
+
+using namespace livecast;
+using namespace livecast::monitor;
 
 StreamInfos::status_t getGlobalStatus(const std::list<std::string>& serversStatus);
 
@@ -77,8 +86,9 @@ void StreamInfos::addServer(const server_t& server, bool primary)
   }
   else
   {
-    if (std::find_if(this->servers[i][j].begin(), this->servers[i][j].end(), 
+    if (std::find_if(this->servers[i][j].begin(), this->servers[i][j].end(),
                      boost::bind(std::equal_to<server_t>(), _1, server)) == this->servers[i][j].end())
+                     
     {
       LogError::getInstance().sysLog(DEBUG, "stream id %u insert server %s:%d on wing %d", this->streamId, server.host.c_str(), server.port, i);
       this->servers[i][j].push_back(server);

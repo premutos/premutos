@@ -1,4 +1,4 @@
-SUBDIRS = lib gui monitor
+SUBDIRS = lib monitor gui 
 
 sbin_PROGRAMS = livecast-monitor
 

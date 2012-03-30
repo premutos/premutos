@@ -7,6 +7,9 @@
 #include <mysql/mysqld_error.h>
 #include <boost/lexical_cast.hpp>
 
+using namespace livecast;
+using namespace livecast::monitor;
+
 MonitorConfiguration::MonitorConfiguration()
 {
   this->portsToServers.insert(std::make_pair(0, "unknown"));

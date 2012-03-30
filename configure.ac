@@ -8,8 +8,8 @@ AM_CONFIG_HEADER(config.h)
 
 #
 #
-AC_PROG_CC([gcc46 gcc cc])
-AC_PROG_CXX([g++46 g++ cpp])
+# AC_PROG_CC([gcc46 gcc cc])
+# AC_PROG_CXX([g++46 g++ cpp])
 AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_INSTALL
