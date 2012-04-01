@@ -2,7 +2,7 @@
 #define __LIVECAST_CONNECTION_HH__
 
 #include "MonitorConfiguration.hh"
-#include "../ResultCallbackIntf.hh"
+#include "ResultCallbackIntf.hh"
 
 #include <string>
 #include <boost/shared_ptr.hpp>

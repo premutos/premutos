@@ -1,7 +1,7 @@
 #ifndef __LIVECAST_STATUS_DETAIL_HH__
 #define __LIVECAST_STATUS_DETAIL_HH__
 
-#include "../ResultCallbackIntf.hh"
+#include "../monitor/ResultCallbackIntf.hh"
 #include "../monitor/StreamInfos.hh"
 #include <wx/wx.h>
 #include <wx/treectrl.h>

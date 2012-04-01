@@ -115,5 +115,6 @@ AC_CONFIG_FILES([
   src/gui/Makefile
   src/lib/Makefile
   src/monitor/Makefile
+  doc/Makefile
 ])
 AC_OUTPUT

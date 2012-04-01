@@ -1,7 +1,7 @@
 #ifndef __LIVECAST_RESULT_HH__
 #define __LIVECAST_RESULT_HH__
 
-#include "../ResultCallbackIntf.hh"
+#include "../monitor/ResultCallbackIntf.hh"
 #include "../monitor/MonitorConfiguration.hh"
 #include "../monitor/LivecastMonitor.hh"
 #include "../monitor/StreamInfos.hh"
@@ -16,6 +16,15 @@ namespace livecast {
 namespace gui {
 
 class LivecastGui;
+
+class LivecastListCtrl : public wxListCtrl
+{
+public:
+  LivecastListCtrl(wxWindow* parent);
+
+private:
+  wxString OnGetItemText(long item, long column) const;
+};
 
 class LivecastResult : public wxPanel,
                        public livecast::monitor::ResultCallbackIntf
@@ -35,13 +44,15 @@ private:
   void onCheckStream(wxCommandEvent& ev);
   void onRefresh(wxCommandEvent& ev);
   void onStreamListDblClicked(wxListEvent& ev);
-  void OnCloseLivecastStatus(wxCloseEvent& event);
   void updateItem(livecast::monitor::MonitorConfiguration::map_streams_infos_t::const_iterator& it);
+
+  void OnPaint(wxPaintEvent& ev);
 
   boost::shared_ptr<livecast::monitor::LivecastMonitor> monitor;
 
   LivecastGui * livecastGui;
-  wxListCtrl * list;
+  // wxListCtrl * list;
+  LivecastListCtrl * list;
 
   wxColour * lightYellow;
   wxColour * lightBlue;  

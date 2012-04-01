@@ -1,7 +1,7 @@
 #ifndef __LIVECAST_MONITOR_HH__
 #define __LIVECAST_MONITOR_HH__
 
-#include "../ResultCallbackIntf.hh"
+#include "ResultCallbackIntf.hh"
 #include "LivecastConnection.hh"
 #include "MonitorConfiguration.hh"
 

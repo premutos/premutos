@@ -1,7 +1,7 @@
 #ifndef __STREAM_INFOS_HH__
 #define __STREAM_INFOS_HH__
 
-#include "../ResultCallbackIntf.hh"
+#include "ResultCallbackIntf.hh"
 #include <list>
 #include <boost/shared_ptr.hpp>
 #include <boost/array.hpp>

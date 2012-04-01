@@ -42,6 +42,17 @@ using namespace livecast;
 using namespace livecast::monitor;
 using namespace livecast::gui;
 
+LivecastListCtrl::LivecastListCtrl(wxWindow* parent)
+  : wxListCtrl(parent,wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | /* wxLC_VIRTUAL | */ wxLC_HRULES | wxLC_VRULES)
+{
+}
+
+wxString LivecastListCtrl::OnGetItemText(long WXUNUSED(item), long WXUNUSED(column)) const
+{
+	return _("todo");
+}
+
+
 LivecastResult::LivecastResult(LivecastGui * livecastGui, boost::shared_ptr<LivecastMonitor> monitor)
   : wxPanel(livecastGui, 
             wxID_ANY, 
@@ -58,7 +69,7 @@ LivecastResult::LivecastResult(LivecastGui * livecastGui, boost::shared_ptr<Live
 {
   wxBoxSizer * hbox = new wxBoxSizer(wxHORIZONTAL);
 
-  this->list = new wxListCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_HRULES | wxLC_VRULES);
+  this->list = new LivecastListCtrl(this);
   this->list->InsertColumn(ID, "Stream ID", wxLIST_FORMAT_LEFT);
   this->list->InsertColumn(STATUS, "Status", wxLIST_FORMAT_LEFT);
   this->list->InsertColumn(MODE, "Mode", wxLIST_FORMAT_LEFT);
@@ -69,6 +80,7 @@ LivecastResult::LivecastResult(LivecastGui * livecastGui, boost::shared_ptr<Live
   hbox->Add(this->list, 1, wxEXPAND | wxALL, 10);
   this->SetSizer(hbox);
 
+  this->Bind(wxEVT_PAINT, &LivecastResult::OnPaint, this, wxID_ANY);
   this->Bind(wxEVT_COMMAND_LIST_ITEM_ACTIVATED, &LivecastResult::onStreamListDblClicked, this, wxID_ANY);
   this->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &LivecastResult::onRefresh, this, wxID_APPLY);
   this->Connect(streamListEvent, wxCommandEventHandler(LivecastResult::onStreamListUpdate));
@@ -158,14 +170,6 @@ int LivecastResult::removeStreamStatus(unsigned int streamId)
   return rc;
 }
 
-void LivecastResult::OnCloseLivecastStatus(wxCloseEvent& WXUNUSED(event))
-{
-  LogError::getInstance().sysLog(ERROR, "LivecastResult::OnCloseLivecastResult");
-  wxMessageDialog* dialog = new wxMessageDialog(this,"close1", "close2", wxOK);
-  dialog->ShowModal();
-  dialog->Destroy();
-}
-
 void LivecastResult::onStreamListUpdate(wxCommandEvent& WXUNUSED(event))
 {
   this->list->DeleteAllItems();
@@ -175,7 +179,7 @@ void LivecastResult::onStreamListUpdate(wxCommandEvent& WXUNUSED(event))
     wxListItem item;
     item.SetId(n);
     item.SetData(it->second->getId());
-    this->list->InsertItem(item);            
+    this->list->InsertItem(item);
     this->updateItem(it);
   }
 }
@@ -224,4 +228,15 @@ void LivecastResult::updateItem(MonitorConfiguration::map_streams_infos_t::const
   this->list->SetItem(n, PROTOCOL, it->second->infos[StreamInfos::FIELDS_PROTOCOL]);
   this->list->SetItem(n, SRC_IP, it->second->infos[StreamInfos::FIELDS_SRC_IP]);
   this->list->SetItem(n, BACKLOG, it->second->infos[StreamInfos::FIELDS_BACKLOG]);
+}
+
+void LivecastResult::OnPaint(wxPaintEvent& ev)
+{
+  wxSize size = this->list->GetSize();
+  unsigned int width = (BACKLOG + 1);
+  for (unsigned int i = 0; i < width; i++)
+  {
+    this->list->SetColumnWidth(i, size.GetWidth() / width);
+  }
+  ev.Skip();
 }

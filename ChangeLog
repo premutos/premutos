@@ -1,5 +1,14 @@
 2012-03-30  Thomas Martinez  <thomas.martinez.07@gmail.com>
 
+	* src/monitor/ResultCallbackIntf.hh,
+	  src/monitor/StreamInfos.hh,
+	  src/monitor/LivecastConnection.hh,
+	  src/monitor/LivecastMonitor.hh,
+	  src/gui/LivecastGui.cc,
+	  src/gui/LivecastResult.hh,
+	  src/gui/LivecastStatus.hh:
+	move ResultCallbackIntf.hh into monitor directory
+
 	* configure.ac
 	  src/Configuration.cc,
 	  src/Configuration.hh,
