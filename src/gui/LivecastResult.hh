@@ -11,23 +11,33 @@
 #include <map>
 #include <list>
 #include <boost/thread/mutex.hpp>
+#include <boost/enable_shared_from_this.hpp>
 
 namespace livecast {
 namespace gui {
 
 class LivecastGui;
 
+//
+//
 class LivecastListCtrl : public wxListCtrl
 {
 public:
-  LivecastListCtrl(wxWindow* parent);
+  LivecastListCtrl(wxWindow* parent, boost::shared_ptr<livecast::monitor::LivecastMonitor> monitor);
+
+protected:
+  wxString OnGetItemText(long item, long column) const;
+  wxListItemAttr * OnGetItemAttr(long item) const;
 
 private:
-  wxString OnGetItemText(long item, long column) const;
+  boost::shared_ptr<livecast::monitor::LivecastMonitor> monitor;
 };
 
+//
+//
 class LivecastResult : public wxPanel,
-                       public livecast::monitor::ResultCallbackIntf
+                       public livecast::monitor::ResultCallbackIntf,
+                       public boost::enable_shared_from_this<LivecastResult>
 {
 public:
   LivecastResult(LivecastGui * livecastGui, boost::shared_ptr<livecast::monitor::LivecastMonitor> monitor);
@@ -51,12 +61,7 @@ private:
   boost::shared_ptr<livecast::monitor::LivecastMonitor> monitor;
 
   LivecastGui * livecastGui;
-  // wxListCtrl * list;
-  LivecastListCtrl * list;
-
-  wxColour * lightYellow;
-  wxColour * lightBlue;  
-  wxColour * orange;  
+  wxListCtrl * list;
 
   typedef std::map<unsigned int, boost::shared_ptr<LivecastStatus> > status_frames_t;
   status_frames_t statusFrames;

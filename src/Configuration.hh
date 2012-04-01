@@ -40,6 +40,7 @@ public:
     bool logDate;
     bool logPid;
     bool checkOnInit;
+    bool useVirtualList;
 
     ProgramOption();
     int parseMainWinSize();
@@ -67,6 +68,7 @@ public:
   inline const char * getMainWindowName() const { return this->opts->mainWinName.c_str(); }
   inline int getMainWinHSize() const { return this->opts->hSize; }
   inline int getMainWinVSize() const { return this->opts->vSize; }
+  inline bool useVirtualStreamList() const { return this->opts->useVirtualList; }
 
 protected:
   boost::shared_ptr<monitor::LivecastConnection> createConnection(const std::string& host, uint16_t port) const;

@@ -24,7 +24,8 @@ Configuration::ProgramOption::ProgramOption()
     logColor(false),
     logDate(false),
     logPid(false),
-    checkOnInit(false)
+    checkOnInit(false),
+    useVirtualList(false)
 {
 }
 
@@ -121,6 +122,7 @@ void Configuration::parseOpts(int argc, char**argv)
       ("main-win-size", po::value<std::string>(&this->opts->mainWinSize), "set main window size")
       ("connection-timeout", po::value<unsigned int>(&this->opts->connectionTimeout)->default_value(this->opts->connectionTimeout), "server connection timeout in milliseconds")
       ("check-on-init", po::bool_switch(&this->opts->checkOnInit), "perform server check on initialisation")
+      ("use-virtual-list", po::bool_switch(&this->opts->useVirtualList), "use a wx widget virtual list to display streams list (see wxWidgets Documentation for further informations)")
       ;
 
     po::store(po::parse_command_line(argc, argv, desc), input_arg);

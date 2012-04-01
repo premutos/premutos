@@ -1,3 +1,19 @@
+2012-04-01  tma  <tma@tmartinez3.cardinet.kewego.int>
+
+	* src/gui/GuiConfiguration.cc,
+	  src/Configuration.cc,
+	  src/Configuration.hh,
+	  src/gui/GuiConfiguration.cc,
+	  src/gui/GuiConfiguration.hh,
+	  src/monitor/LivecastMonitor.cc:
+	singleton for gui configuration
+	option for wxlistctrl (virtaul or not)
+
+	* src/gui/LivecastResult.cc,
+	  src/gui/LivecastResult.hh,
+	  src/livecast_monitor.cc:
+	add a wxListCtrl virtual
+
 2012-03-30  Thomas Martinez  <thomas.martinez.07@gmail.com>
 
 	* src/monitor/ResultCallbackIntf.hh,

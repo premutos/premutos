@@ -33,6 +33,7 @@ Livecast::Livecast()
   : cfg(new Configuration),
     monitor(new monitor::LivecastMonitor(cfg))
 {
+  gui::GuiConfiguration::setInstance(this->cfg);
 }
 
 Livecast::~Livecast()
@@ -63,7 +64,7 @@ bool Livecast::OnInit()
 
   if (this->cfg->getOpts()->checkOnInit)
   {
-    gui->refresh();
+    boost::thread(boost::bind(&gui::LivecastGui::refresh, gui));
   }
 
   return true;

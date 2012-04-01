@@ -2,11 +2,16 @@
 #include "LivecastResult.hh"
 #include "LivecastGui.hh"
 #include "LivecastStatus.hh"
+#include "GuiConfiguration.hh"
 
 #include <boost/property_tree/xml_parser.hpp>
 
 namespace livecast {
 namespace gui {
+
+static const wxColour lightYellow(255, 255, 226);
+static const wxColour lightBlue(226, 255, 255);
+static const wxColour orange(225, 143, 26);
 
 enum column_id_t
 {
@@ -42,16 +47,70 @@ using namespace livecast;
 using namespace livecast::monitor;
 using namespace livecast::gui;
 
-LivecastListCtrl::LivecastListCtrl(wxWindow* parent)
-  : wxListCtrl(parent,wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | /* wxLC_VIRTUAL | */ wxLC_HRULES | wxLC_VRULES)
+LivecastListCtrl::LivecastListCtrl(wxWindow* parent, boost::shared_ptr<LivecastMonitor> monitor)
+  : wxListCtrl(parent,wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_VIRTUAL | wxLC_HRULES | wxLC_VRULES),
+    monitor(monitor)
 {
 }
 
-wxString LivecastListCtrl::OnGetItemText(long WXUNUSED(item), long WXUNUSED(column)) const
+wxString LivecastListCtrl::OnGetItemText(long item, long column) const
 {
-	return _("todo");
+  LogError::getInstance().sysLog(DEBUG, "ask value for (%d, %d)", item, column);
+
+  const char * value;
+  std::ostringstream oss;
+  MonitorConfiguration::map_streams_infos_t::const_iterator it = this->monitor->getStreams().begin();
+  std::advance(it, item);
+  if (it != this->monitor->getStreams().end())
+  {
+    switch (column)
+    {
+    case ID: 
+      oss << it->second->getId();
+      value = oss.str().c_str();
+      break;
+    case STATUS: 
+      oss << it->second->getStatus();
+      value = oss.str().c_str();
+      break;
+    case MODE:     value = it->second->infos[StreamInfos::FIELDS_MODE].c_str(); break;
+    case PROTOCOL: value = it->second->infos[StreamInfos::FIELDS_PROTOCOL].c_str(); break;
+    case SRC_IP:   value = it->second->infos[StreamInfos::FIELDS_SRC_IP].c_str(); break;
+    case BACKLOG:  value = it->second->infos[StreamInfos::FIELDS_BACKLOG].c_str(); break;
+    default:
+      LogError::getInstance().sysLog(ERROR, "cannot find column %d", column);
+      assert(false);
+    }
+  }
+    
+  return _(value);
 }
 
+wxListItemAttr * LivecastListCtrl::OnGetItemAttr(long item) const
+{
+  wxColour fgColour;
+  wxColour bgColour;
+  MonitorConfiguration::map_streams_infos_t::const_iterator it = this->monitor->getStreams().begin();
+  std::advance(it, item);
+  if (it != this->monitor->getStreams().end())
+  {
+    switch (it->second->getStatus())
+    {  
+    case StreamInfos::STATUS_WAITING:      fgColour = *wxLIGHT_GREY; break;
+    case StreamInfos::STATUS_INITIALIZING: fgColour = *wxBLUE;       break;
+    case StreamInfos::STATUS_RUNNING:      fgColour = *wxGREEN;      break;
+    case StreamInfos::STATUS_ERROR:        fgColour = *wxRED;        break;
+    case StreamInfos::STATUS_UNKNOWN:      fgColour = orange; break;
+    }  
+    bgColour = (((item % 2) == 0) ? lightYellow : lightBlue);
+  }
+
+  wxListItemAttr * attr = new wxListItemAttr(fgColour, bgColour, wxFont());
+  return attr;
+}
+
+//
+//
 
 LivecastResult::LivecastResult(LivecastGui * livecastGui, boost::shared_ptr<LivecastMonitor> monitor)
   : wxPanel(livecastGui, 
@@ -61,15 +120,19 @@ LivecastResult::LivecastResult(LivecastGui * livecastGui, boost::shared_ptr<Live
             wxBORDER_NONE),
     monitor(monitor),
     livecastGui(livecastGui),
-    lightYellow(new wxColour(255, 255, 226)),
-    lightBlue(new wxColour(226, 255, 255)),
-    orange(new wxColour(225, 143, 26)),
     streamListEvent(wxNewEventType()),
     checkStreamEvent(wxNewEventType())
 {
   wxBoxSizer * hbox = new wxBoxSizer(wxHORIZONTAL);
 
-  this->list = new LivecastListCtrl(this);
+  if (GuiConfiguration::getInstance()->useVirtualStreamList())
+  {
+    this->list = new LivecastListCtrl(this, monitor);
+  }
+  else
+  {
+    this->list =  new wxListCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_HRULES | wxLC_VRULES);
+  }
   this->list->InsertColumn(ID, "Stream ID", wxLIST_FORMAT_LEFT);
   this->list->InsertColumn(STATUS, "Status", wxLIST_FORMAT_LEFT);
   this->list->InsertColumn(MODE, "Mode", wxLIST_FORMAT_LEFT);
@@ -172,21 +235,46 @@ int LivecastResult::removeStreamStatus(unsigned int streamId)
 
 void LivecastResult::onStreamListUpdate(wxCommandEvent& WXUNUSED(event))
 {
-  this->list->DeleteAllItems();
-  for (MonitorConfiguration::map_streams_infos_t::const_iterator it = this->monitor->getStreams().begin(); it != this->monitor->getStreams().end(); ++it)
+  if (this->list->IsVirtual())
   {
-    unsigned int n = std::distance(MonitorConfiguration::map_streams_infos_t::const_iterator(this->monitor->getStreams().begin()), it);
-    wxListItem item;
-    item.SetId(n);
-    item.SetData(it->second->getId());
-    this->list->InsertItem(item);
-    this->updateItem(it);
+    LogError::getInstance().sysLog(ERROR, "stream list update [size : %d]", this->monitor->getStreams().size());
+    this->list->SetItemCount(this->monitor->getStreams().size());
+  }
+  else
+  {
+    this->list->DeleteAllItems();
+    for (MonitorConfiguration::map_streams_infos_t::const_iterator it = this->monitor->getStreams().begin(); it != this->monitor->getStreams().end(); ++it)
+    {
+      unsigned int n = std::distance(MonitorConfiguration::map_streams_infos_t::const_iterator(this->monitor->getStreams().begin()), it);
+      wxListItem item;
+      std::cout << n << " ";
+      item.SetId(n);
+      item.SetData(it->second->getId());
+      unsigned int n2 = this->list->InsertItem(item);
+      assert(n == n2);
+      this->updateItem(it);
+    }
+    std::cout << std::endl;
   }
 }
 
 void LivecastResult::onStreamListDblClicked(wxListEvent& event)
 {
-  this->livecastGui->check(event.GetItem().GetData());
+  LogError::getInstance().sysLog(ERROR, "double click on item %d with data %d", event.GetIndex(), event.GetItem().GetData());
+
+  if (this->list->IsVirtual())
+  {
+    MonitorConfiguration::map_streams_infos_t::const_iterator it = this->monitor->getStreams().begin();
+    std::advance(it, event.GetIndex());
+    if (it != this->monitor->getStreams().end())
+    {
+      this->livecastGui->check(it->second->getId());
+    }
+  }
+  else
+  {
+    this->livecastGui->check(event.GetItem().GetData());
+  }
 }
 
 void LivecastResult::onCheckStream(wxCommandEvent& event)
@@ -194,7 +282,16 @@ void LivecastResult::onCheckStream(wxCommandEvent& event)
   unsigned int streamId = (unsigned int)event.GetInt();
   MonitorConfiguration::map_streams_infos_t::const_iterator it = this->monitor->getStreams().find(streamId);
   assert(it != this->monitor->getStreams().end());
-  this->updateItem(it);
+
+  if (this->list->IsVirtual())
+  {
+    unsigned int n = std::distance(MonitorConfiguration::map_streams_infos_t::const_iterator(this->monitor->getStreams().begin()), it);
+    this->list->RefreshItem(n);
+  }
+  else
+  {
+    this->updateItem(it);
+  }
 }
 
 void LivecastResult::onRefresh(wxCommandEvent& WXUNUSED(event))
@@ -212,9 +309,9 @@ void LivecastResult::updateItem(MonitorConfiguration::map_streams_infos_t::const
   case StreamInfos::STATUS_INITIALIZING: this->list->SetItemTextColour(n, wxColour(wxColour(*wxBLUE)));       break;
   case StreamInfos::STATUS_RUNNING:      this->list->SetItemTextColour(n, wxColour(wxColour(*wxGREEN)));      break;
   case StreamInfos::STATUS_ERROR:        this->list->SetItemTextColour(n, wxColour(wxColour(*wxRED)));        break;
-  case StreamInfos::STATUS_UNKNOWN:      this->list->SetItemTextColour(n, wxColour(wxColour(*this->orange))); break;
+  case StreamInfos::STATUS_UNKNOWN:      this->list->SetItemTextColour(n, wxColour(wxColour(orange))); break;
   }  
-  this->list->SetItemBackgroundColour(n, wxColour(wxColour(((n % 2) == 0) ? *this->lightYellow : *this->lightBlue)));
+  this->list->SetItemBackgroundColour(n, wxColour(wxColour(((n % 2) == 0) ? lightYellow : lightBlue)));
   
   std::ostringstream ossStreamId;
   std::ostringstream ossStreamStatus;
