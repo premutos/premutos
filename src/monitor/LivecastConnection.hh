@@ -29,7 +29,7 @@ public:
                      const MonitorConfiguration * const conf);
   ~LivecastConnection();
 
-  void check(unsigned int streamId, boost::shared_ptr<boost::property_tree::ptree> result);
+  void check(unsigned int streamId, boost::shared_ptr<boost::property_tree::ptree> result, bool details = false);
 protected:
   void handleConnect(const boost::system::error_code& error);
   void handleTimeout(const boost::system::error_code& error);
@@ -43,6 +43,7 @@ private:
 
   unsigned int streamId;
   boost::shared_ptr<boost::property_tree::ptree> result;
+  bool details;
 
   boost::condition_variable cond;
   boost::mutex checkMut;

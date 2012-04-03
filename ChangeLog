@@ -1,3 +1,34 @@
+2012-04-03  Thomas Martinez  <thomas.martinez.07@gmail.com>
+
+	* src/gui/LivecastGui.cc: 
+	  src/gui/LivecastGui.hh,
+	  src/gui/LivecastResult.cc,
+	  src/gui/LivecastResult.hh,
+	  src/gui/LivecastStatus.cc,
+	  src/gui/LivecastStatus.hh,
+	  src/gui/Makefile.am,
+	  src/monitor/LivecastConnection.cc,
+	  src/monitor/LivecastConnection.hh,
+	  src/monitor/LivecastMonitor.cc,
+	  src/monitor/LivecastMonitor.hh,
+	  src/monitor/MonitorConfiguration.hh,
+	  src/monitor/ResultCallbackIntf.hh,
+	  src/monitor/StreamInfos.cc,
+	  src/monitor/StreamInfos.hh:
+	Add servers list and many others things
+	
+	* src/gui/LivecastInfos.cc,
+	  src/gui/LivecastInfos.hh,
+	  src/gui/LivecastListCtrl.cc,
+	  src/gui/LivecastListCtrl.hh,
+	  src/gui/LivecastServers.cc,
+	  src/gui/LivecastServers.hh,
+	  src/gui/ResultCallback.cc,
+	  src/gui/ResultCallback.hh,
+	  src/gui/Util.cc,
+	  src/gui/Util.hh:
+	Add files
+
 2012-04-01  tma  <tma@tmartinez3.cardinet.kewego.int>
 
 	* src/gui/GuiConfiguration.cc,

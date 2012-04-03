@@ -19,7 +19,8 @@ public:
   LivecastStatus(LivecastResult * livecastResult, const std::string& windowName, boost::shared_ptr<livecast::monitor::StreamInfos> streamInfos);
   ~LivecastStatus();
   
-  void commitStreamList();
+  void commitStreamsList();
+  void commitServersList();
   void commitCheckStream(unsigned int streamId);
 
 private:

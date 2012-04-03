@@ -18,6 +18,7 @@ LivecastConnection::LivecastConnection(boost::asio::io_service& io_service,
     deadline_timer(io_service),
     strand(io_service),
     streamId(0),
+    details(false),
     data_ready(false),
     host(host),
     port(port),
@@ -31,12 +32,13 @@ LivecastConnection::~LivecastConnection()
 {
 }
 
-void LivecastConnection::check(unsigned int streamId, boost::shared_ptr<boost::property_tree::ptree> result)
+void LivecastConnection::check(unsigned int streamId, boost::shared_ptr<boost::property_tree::ptree> result, bool details)
 {
   boost::unique_lock<boost::mutex> lockCheck(this->checkMut);
   boost::unique_lock<boost::mutex> lockSync(this->syncMut);
   this->streamId = streamId;
   this->result = result;
+  this->details = details;
   try
   {
     std::ostringstream os;
@@ -119,7 +121,14 @@ void LivecastConnection::handleConnect(const boost::system::error_code& err)
 
     // ask for status
     std::ostringstream oss;
-    oss << "status " << this->streamId << "\r\n";
+    if (this->details)
+    {
+      oss << "status_detail " << this->streamId << "\r\n";
+    }
+    else
+    {
+      oss << "status " << this->streamId << "\r\n";
+    }
     boost::asio::write(socket, boost::asio::buffer(oss.str()), boost::asio::transfer_all(), error);
     this->checkError(error);
 

@@ -100,7 +100,11 @@ LivecastStatus::~LivecastStatus()
 {
 }
 
-void LivecastStatus::commitStreamList()
+void LivecastStatus::commitStreamsList()
+{
+}
+
+void LivecastStatus::commitServersList()
 {
 }
 

@@ -16,6 +16,7 @@ class MonitorConfiguration
 public:
   typedef std::map<unsigned int, const std::string> port_to_server_t;
   typedef std::map<unsigned int, boost::shared_ptr<StreamInfos> > map_streams_infos_t;
+  typedef std::map<std::pair<std::string, uint16_t>, boost::shared_ptr<LivecastConnection> > connections_t;
 
 public:
   MonitorConfiguration();
@@ -36,6 +37,7 @@ public:
 
   port_to_server_t::mapped_type& getServerFromPort(port_to_server_t::key_type port) const;
   inline const map_streams_infos_t& getStreamsInfos() const { return this->streamsInfos; }
+  inline const connections_t& getConnections() const { return this->connections; }
   boost::shared_ptr<LivecastConnection> getConnection(const std::string& host, uint16_t port);
 
   int load(StreamInfos& streamInfos) const;
@@ -46,7 +48,6 @@ protected:
   int initMysql(const char * query);
 
 private:
-  typedef std::map<std::pair<std::string, uint16_t>, boost::shared_ptr<LivecastConnection> > connections_t;
   connections_t connections;
   port_to_server_t portsToServers;
   map_streams_infos_t streamsInfos;

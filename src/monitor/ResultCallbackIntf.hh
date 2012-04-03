@@ -11,7 +11,8 @@ namespace monitor {
 class ResultCallbackIntf
 {
 public:
-  virtual void commitStreamList() = 0;
+  virtual void commitStreamsList() = 0;
+  virtual void commitServersList() = 0;
   virtual void commitCheckStream(unsigned int streamId) = 0;
 };
 

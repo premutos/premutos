@@ -50,6 +50,45 @@ void StreamInfos::check(boost::shared_ptr<ResultCallbackIntf> resultCb,
       {
         boost::shared_ptr<LivecastConnection> conn = cfg->getConnection((*it).host, (*it).port);
         conn->check(this->streamId, statusHost);
+
+//         std::cout << std::endl
+//                   << "============================="
+//                   << std::endl;
+//         boost::property_tree::write_xml(std::cout, *statusHost);
+//         std::cout << std::endl
+//                   << "============================="
+//                   << std::endl;
+
+        for (boost::property_tree::ptree::const_iterator itResult = statusHost->get_child("").begin(); 
+             itResult != statusHost->get_child("").end(); ++itResult)
+        {
+          const std::string status = itResult->second.get<std::string>("result");
+          LogError::getInstance().sysLog(DEBUG, "find result: status => '%s'", status.c_str());
+          if (status.find("WAITING") != std::string::npos)
+          {
+            (*it).status = StreamInfos::STATUS_WAITING;
+          }
+          else if (status.find("INITIALIZING") != std::string::npos)
+          {
+            (*it).status = StreamInfos::STATUS_INITIALIZING;
+          }
+          else if (status.find("RUNNING") != std::string::npos)
+          {
+            (*it).status = StreamInfos::STATUS_RUNNING;
+          }
+          else if (status.find("RUNNING;ENABLE") != std::string::npos)
+          {
+            (*it).status = StreamInfos::STATUS_RUNNING;
+          }
+          else if (status.find("RUNNING;DISABLE") != std::string::npos)
+          {
+            (*it).status = StreamInfos::STATUS_RUNNING;
+          }
+          else if  (status.find("ERROR") != std::string::npos)
+          {
+            (*it).status = StreamInfos::STATUS_ERROR;
+          }
+        }
       }
     }
     const std::string wing = (i == 0) ? "primary" : "backup" ;
@@ -179,6 +218,36 @@ void StreamInfos::parseStatus()
 
 }
 
+StreamInfos::status_t StreamInfos::parseStatus(const std::string& value)
+{
+  StreamInfos::status_t statusTmp = StreamInfos::STATUS_UNKNOWN;
+  if (value.find("WAITING") != std::string::npos)
+  {
+    statusTmp = StreamInfos::STATUS_WAITING;
+  }
+  else if (value.find("INITIALIZING") != std::string::npos)
+  {
+    statusTmp = StreamInfos::STATUS_INITIALIZING;
+  }
+  else if (value.find("RUNNING") != std::string::npos)
+  {
+    statusTmp = StreamInfos::STATUS_RUNNING;
+  }
+  else if (value.find("RUNNING;ENABLE") != std::string::npos)
+  {
+    statusTmp = StreamInfos::STATUS_RUNNING;
+  }
+  else if (value.find("RUNNING;DISABLE") != std::string::npos)
+  {
+    statusTmp = StreamInfos::STATUS_RUNNING;
+  }
+  else if  (value.find("ERROR") != std::string::npos)
+  {
+    statusTmp = StreamInfos::STATUS_ERROR;
+  }
+  return statusTmp;
+}
+
 //
 // c functions
 
@@ -188,31 +257,7 @@ StreamInfos::status_t getGlobalStatus(const std::list<std::string>& serversStatu
 
   for (std::list<std::string>::const_iterator it = serversStatus.begin(); it != serversStatus.end(); ++it)
   {
-    StreamInfos::status_t statusTmp = StreamInfos::STATUS_UNKNOWN;
-    if ((*it).find("WAITING") != std::string::npos)
-    {
-      statusTmp = StreamInfos::STATUS_WAITING;
-    }
-    else if ((*it).find("INITIALIZING") != std::string::npos)
-    {
-      statusTmp = StreamInfos::STATUS_INITIALIZING;
-    }
-    else if ((*it).find("RUNNING") != std::string::npos)
-    {
-      statusTmp = StreamInfos::STATUS_RUNNING;
-    }
-    else if ((*it).find("RUNNING;ENABLE") != std::string::npos)
-    {
-      statusTmp = StreamInfos::STATUS_RUNNING;
-    }
-    else if ((*it).find("RUNNING;DISABLE") != std::string::npos)
-    {
-      statusTmp = StreamInfos::STATUS_RUNNING;
-    }
-    else if  ((*it).find("ERROR") != std::string::npos)
-    {
-      statusTmp = StreamInfos::STATUS_ERROR;
-    }
+    StreamInfos::status_t statusTmp = StreamInfos::parseStatus(*it);
 
     if (status == StreamInfos::STATUS_UNKNOWN)
     {

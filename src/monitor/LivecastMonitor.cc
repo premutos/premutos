@@ -26,12 +26,14 @@ int LivecastMonitor::run()
 
 void LivecastMonitor::refresh(boost::shared_ptr<ResultCallbackIntf> resultCb)
 {
-  resultCb->commitStreamList();
+  resultCb->commitStreamsList();
+  resultCb->commitServersList();
   for (MonitorConfiguration::map_streams_infos_t::const_iterator it = this->cfg->getStreamsInfos().begin(); it != this->cfg->getStreamsInfos().end(); ++it)
   {
     this->check(it->first, resultCb);
   }
-  resultCb->commitStreamList();
+  resultCb->commitStreamsList();
+  resultCb->commitServersList();
 }
 
 void LivecastMonitor::check(unsigned int streamId,

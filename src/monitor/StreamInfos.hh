@@ -41,10 +41,11 @@ public:
     const std::string host;
     const uint16_t port;
     const type_t type;
+    status_t status;
     server_t(const char * host,
              const uint16_t& port,
              const type_t& type)
-      : host(host), port(port), type(type)
+      : host(host), port(port), type(type), status(STATUS_UNKNOWN)
       {
       }
   };
@@ -60,7 +61,10 @@ public:
 
   inline unsigned int getId() const { return this->streamId; }
   inline status_t getStatus() const { return this->status; }
-  inline const boost::property_tree::ptree& getResultTree() const { return resultTree; }
+  inline const boost::property_tree::ptree& getResultTree() const { return this->resultTree; }
+  inline const boost::array<boost::array<std::list<server_t>, 3>, 2>& getServers() const { return this->servers; }
+
+  static status_t parseStatus(const std::string& value);
 
   enum fields_t
   {
