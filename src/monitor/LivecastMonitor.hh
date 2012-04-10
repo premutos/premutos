@@ -1,10 +1,6 @@
 #ifndef __LIVECAST_MONITOR_HH__
 #define __LIVECAST_MONITOR_HH__
 
-#include "ResultCallbackIntf.hh"
-#include "LivecastConnection.hh"
-#include "MonitorConfiguration.hh"
-
 #include <list>
 #include <boost/shared_ptr.hpp>
 #include <boost/asio.hpp>
@@ -12,6 +8,10 @@
 
 namespace livecast {
 namespace monitor {
+
+class MonitorConfiguration;
+class ResultCallbackIntf;
+class StreamInfos;
 
 class LivecastMonitor
 {
@@ -22,12 +22,11 @@ public:
   int run();
   boost::asio::io_service& getIOService();
 
-  // Livecast monitor interface
   void refresh(boost::shared_ptr<ResultCallbackIntf> resultCb);
   void check(unsigned int streamId, boost::shared_ptr<ResultCallbackIntf> resultCb);
   const boost::shared_ptr<StreamInfos> getStreamInfos(unsigned int streamId);
-  const MonitorConfiguration::map_streams_infos_t& getStreams() const;
-  inline const boost::shared_ptr<MonitorConfiguration> getConfiguration() const { return this->cfg; }
+  // const MonitorConfiguration::map_streams_infos_t& getStreams() const;
+  const boost::shared_ptr<MonitorConfiguration> getConfiguration() const;
 
 protected:
   void handleCheckTimer(const boost::system::error_code&);

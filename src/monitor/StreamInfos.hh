@@ -1,14 +1,15 @@
 #ifndef __STREAM_INFOS_HH__
 #define __STREAM_INFOS_HH__
 
-#include "ResultCallbackIntf.hh"
 #include <list>
 #include <boost/shared_ptr.hpp>
 #include <boost/array.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 namespace livecast {
 namespace monitor {
 
+class ResultCallbackIntf;
 class MonitorConfiguration;
 class LivecastConnection;
 
@@ -39,13 +40,19 @@ public:
       UNKNOWN,
     };
     const std::string host;
+    const uint16_t adminPort;
+    const std::string protocol;
     const uint16_t port;
     const type_t type;
     status_t status;
+    bool leaf;
     server_t(const char * host,
+             const uint16_t adminPort,
+             const char * protocol,
              const uint16_t& port,
-             const type_t& type)
-      : host(host), port(port), type(type), status(STATUS_UNKNOWN)
+             const type_t& type,
+             const bool leaf)
+      : host(host), adminPort(adminPort), protocol(protocol), port(port), type(type), status(STATUS_UNKNOWN), leaf(leaf)
       {
       }
   };

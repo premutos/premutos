@@ -3,10 +3,13 @@
 
 #include "gui/GuiConfiguration.hh"
 #include "monitor/MonitorConfiguration.hh"
-#include "monitor/LivecastMonitor.hh"
 #include <sstream>
 
 namespace livecast {
+
+namespace monitor {
+class LivecastMonitor;
+}
 
 class Configuration : public monitor::MonitorConfiguration,
                       public gui::GuiConfiguration

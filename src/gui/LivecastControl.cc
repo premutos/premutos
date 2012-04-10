@@ -19,9 +19,9 @@ LivecastControl::LivecastControl(LivecastGui * livecastGui)
   wxButton * check = new wxButton(this, wxID_APPLY, wxT("Check"));
   wxButton * quit = new wxButton(this, wxID_EXIT, wxT("Quit"));
   
-  hbox->Add(refresh, 0, wxALIGN_RIGHT | wxRIGHT, 10);
-  hbox->Add(check, 0, wxALIGN_RIGHT | wxRIGHT, 10);
-  hbox->Add(quit, 0, wxALIGN_RIGHT | wxRIGHT, 0);
+  hbox->Add(refresh, 0, wxALIGN_RIGHT | wxRIGHT | wxLEFT| wxBOTTOM, 10);
+  hbox->Add(check, 0, wxALIGN_RIGHT | wxRIGHT | wxLEFT| wxBOTTOM, 10);
+  hbox->Add(quit, 0, wxALIGN_RIGHT | wxRIGHT | wxLEFT| wxBOTTOM, 10);
 
   this->SetSizer(hbox);
 

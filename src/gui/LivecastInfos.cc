@@ -11,7 +11,7 @@ LivecastInfos::LivecastInfos(wxWindow * parent)
   : wxPanel(parent, wxID_ANY)
 {
   
-  this->noteBook = new wxNotebook(this, wxID_ANY);
+  this->noteBook = new wxAuiNotebook(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_NB_TOP);
 
   wxBoxSizer * box = new wxBoxSizer(wxHORIZONTAL);
   box->Add(this->noteBook, 1, wxEXPAND | wxALL, 10);
@@ -88,6 +88,7 @@ LivecastInfos::LivecastInfos(wxWindow * parent)
     this->noteBook->InsertPage(1, this->servers, "servers", false);
   }
 
+  this->noteBook->Bind(wxEVT_COMMAND_AUINOTEBOOK_TAB_MIDDLE_UP, &LivecastInfos::onTabMiddleUp, this, wxID_ANY);
 }
 
 void LivecastInfos::setInfos(const boost::shared_ptr<livecast::monitor::StreamInfos> streamInfos)
@@ -136,19 +137,18 @@ void LivecastInfos::setInfos(const boost::shared_ptr<livecast::monitor::StreamIn
         this->servers->SetItem(index, 3, "n/a");
         this->servers->SetItem(index, 4, portSS.str().c_str());
         this->servers->SetItem(index, 5, statusSS.str().c_str());
-
-//         switch ((*it).status)
-//         {  
-//         case StreamInfos::STATUS_WAITING:      this->servers->SetItemTextColour(n, wxColour(wxColour(*wxLIGHT_GREY))); break;
-//         case StreamInfos::STATUS_INITIALIZING: this->servers->SetItemTextColour(n, wxColour(wxColour(*wxBLUE)));       break;
-//         case StreamInfos::STATUS_RUNNING:      this->servers->SetItemTextColour(n, wxColour(wxColour(*wxGREEN)));      break;
-//         case StreamInfos::STATUS_ERROR:        this->servers->SetItemTextColour(n, wxColour(wxColour(*wxRED)));        break;
-//         case StreamInfos::STATUS_UNKNOWN:      this->servers->SetItemTextColour(n, wxColour(wxColour(orange)));        break;
-//         }  
         this->servers->SetItemTextColour(n, (*it).status);
         this->servers->SetItemBackgroundColour(n, wxColour(wxColour(((n % 2) == 0) ? lightYellow : lightBlue)));
         n++;
       }
     }
+  }
+}
+
+void LivecastInfos::onTabMiddleUp(wxAuiNotebookEvent& event)
+{
+  if (event.GetSelection() > 1)
+  {
+    this->noteBook->DeletePage(event.GetSelection());
   }
 }

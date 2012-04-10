@@ -1,4 +1,6 @@
 #include "Configuration.hh"
+#include "monitor/LivecastMonitor.hh"
+#include "monitor/LivecastConnection.hh"
 #include "lib/Log.hh"
 
 #include <wx/wx.h>

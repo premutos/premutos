@@ -6,8 +6,8 @@ using namespace livecast;
 using namespace livecast::monitor;
 using namespace livecast::gui;
 
-LivecastListCtrl::LivecastListCtrl(wxWindow * parent/*, boost::shared_ptr<LivecastMonitor> monitor*/)
-  : wxListView(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_HRULES | wxLC_VRULES | wxLC_SINGLE_SEL)
+LivecastListCtrl::LivecastListCtrl(wxWindow * parent)
+  : wxListView(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_HRULES | wxLC_VRULES | wxLC_SINGLE_SEL | wxBORDER_NONE)
 {
   this->Bind(wxEVT_PAINT, &LivecastListCtrl::onPaint, this, wxID_ANY);
 }

@@ -1,4 +1,5 @@
 #include "MonitorConfiguration.hh"
+#include "StreamInfos.hh"
 #include "../lib/Log.hh"
 #include <sstream>
 #include <cassert>
@@ -9,6 +10,20 @@
 
 using namespace livecast;
 using namespace livecast::monitor;
+
+enum query_list_rows_t
+{
+  QLR_STREAM_ID,
+  QLR_ROW,
+  QLR_STREAMDUP_HOSTNAME, 
+  QLR_STREAMDUP_MODE, 
+  QLR_STREAMDUP_PROTOCOL, 
+  QLR_STREAMDUP_PORT, 
+  QLR_MASTERBOX_HOSTNAME, 
+  QLR_MASTERBOX_PORT, 
+  QLR_MASTERBOX_LEAF,
+  QLR_STREAMER_HOSTNAME,
+};
 
 MonitorConfiguration::MonitorConfiguration()
 {
@@ -28,6 +43,10 @@ boost::shared_ptr<LivecastConnection> MonitorConfiguration::getConnection(const 
   connections_t::key_type key = std::make_pair(host, port);
   connections_t::iterator it;
   it = this->connections.find(key);
+  if (it == this->connections.end())
+  {
+    LogError::getInstance().sysLog(CRITICAL, "cannot find connection to %s:%u", host.c_str(), port);
+  }
   assert (it != this->connections.end());
   return it->second;
 }
@@ -127,6 +146,71 @@ int MonitorConfiguration::load(StreamInfos& streamInfos) const
   return 0;
 }
 
+std::string MonitorConfiguration::getPipeline(unsigned int streamId) const
+{
+  const char * dbHost = this->getDbHost();
+  const char * dbUser = this->getDbUser();
+  const char * dbPass = this->getDbPass();
+  const char * dbName = this->getDbName();
+  std::ostringstream query;
+  query << "select gstreamerPipeline from streamOptions where streamSrcId = '" << streamId << "'";
+
+  MYSQL connection;
+  MYSQL_RES *result;
+  MYSQL_ROW row;
+  int rc = 0;
+
+	mysql_init(&connection);
+	if (!mysql_real_connect(&connection, dbHost, dbUser, dbPass, dbName, 0, NULL, 0))
+  {
+    LogError::getInstance().sysLog(ERROR, "connection to database failed: %s\n", mysql_error(&connection));
+		// return EINVAL;
+    return "cannot load pipeline";
+	}
+
+  rc = mysql_query(&connection, query.str().c_str());
+  if (rc < 0)
+  {
+    LogError::getInstance().sysLog(ERROR, "query failed: %s\n", mysql_error(&connection));
+		// return rc;
+    return "cannot load pipeline";
+  }
+
+  if (!mysql_field_count(&connection))
+  {
+    LogError::getInstance().sysLog(DEBUG, "no result from query: %s\n", query.str().c_str());
+    // return EINVAL;
+    return "";
+  }
+
+  LogError::getInstance().sysLog(DEBUG, "query: '%s'\n", query.str().c_str());
+
+  result = mysql_use_result(&connection);
+  if (!result) 
+  {
+    LogError::getInstance().sysLog(ERROR, "cannot use result on the mysql connection: (%d) %s\n", mysql_errno(&connection), mysql_error(&connection));
+    // return EINVAL;
+    return "cannot load pipeline";
+  }
+
+  
+  row = mysql_fetch_row(result);
+  
+  std::string pipeline;
+  if (row != 0)
+  {
+    pipeline = row[0];
+  }
+  else 
+  {
+    pipeline = "cannot load pipeline";
+  }
+
+	mysql_close(&connection);
+
+  return pipeline;
+}
+
 int MonitorConfiguration::loadStreamList()
 {
   const char * dbHost = this->getDbHost();
@@ -176,22 +260,54 @@ int MonitorConfiguration::loadStreamList()
 
     if (row != 0)
     {
-      LogError::getInstance().sysLog(DEBUG, "%s - %s - %s - %s - %s", row[0], row[1], row[2], row[3], row[4]);
-      unsigned int streamId = boost::lexical_cast<unsigned int>(row[0]);
+      LogError::getInstance().sysLog(DEBUG, "%s - %s - %s - %s - %s - %s - %s - %s - %s - %s", 
+                                     row[QLR_STREAM_ID], 
+                                     row[QLR_ROW],
+                                     row[QLR_STREAMDUP_HOSTNAME],
+                                     row[QLR_STREAMDUP_MODE],
+                                     row[QLR_STREAMDUP_PROTOCOL],
+                                     row[QLR_STREAMDUP_PORT],
+                                     row[QLR_MASTERBOX_HOSTNAME],
+                                     row[QLR_MASTERBOX_PORT],
+                                     row[QLR_MASTERBOX_LEAF],
+                                     row[QLR_STREAMER_HOSTNAME]);
+      unsigned int streamId = boost::lexical_cast<unsigned int>(row[QLR_STREAM_ID]);
       map_streams_infos_t::iterator it = this->streamsInfos.find(streamId);
       if (it == this->streamsInfos.end())
       {
         boost::shared_ptr<StreamInfos> si(new StreamInfos(streamId));
         it = this->streamsInfos.insert(std::make_pair(streamId, si)).first;
       }
+      
+      //
+      // add servers
+      uint16_t sdPort, mbPort;
+      const std::string sdProtocol = std::string(row[QLR_STREAMDUP_MODE]) + " " + std::string(row[QLR_STREAMDUP_PROTOCOL]);
+      sdPort = boost::lexical_cast<uint16_t>(row[QLR_STREAMDUP_PORT]);
+      mbPort = boost::lexical_cast<uint16_t>(row[QLR_MASTERBOX_PORT]);
+      StreamInfos::server_t streamdup(row[QLR_STREAMDUP_HOSTNAME], 1111, sdProtocol.c_str(), sdPort, StreamInfos::server_t::STREAM_DUP, false);
+      StreamInfos::server_t masterbox(row[QLR_MASTERBOX_HOSTNAME], 2222, "tcp", mbPort, StreamInfos::server_t::MASTER_BOX, row[QLR_MASTERBOX_LEAF]);
 
-      std::list<connections_t::key_type> keys;
-      keys.push_back(std::make_pair(row[2], 1111));
-      keys.push_back(std::make_pair(row[3], 2222));
-      if (row[4] != NULL)
+      it->second->addServer(streamdup, row[QLR_ROW][0] == '0');
+      it->second->addServer(masterbox, row[QLR_ROW][0] == '0');
+
+      if (row[QLR_STREAMER_HOSTNAME] != NULL)
       {
-        keys.push_back(std::make_pair(row[4], 3333));
-        keys.push_back(std::make_pair(row[4], 4444));
+        StreamInfos::server_t streamerRtmp(row[QLR_STREAMER_HOSTNAME], 3333, "flv/tcp", 1936, StreamInfos::server_t::STREAMER_RTMP, false); 
+        StreamInfos::server_t streamerHls(row[QLR_STREAMER_HOSTNAME], 4444, "http", 80, StreamInfos::server_t::STREAMER_HLS, false);
+        it->second->addServer(streamerRtmp, row[QLR_ROW][0] == '0');
+        it->second->addServer(streamerHls, row[QLR_ROW][0] == '0');
+      }
+
+      //
+      // prepare connections
+      std::list<connections_t::key_type> keys;
+      keys.push_back(std::make_pair(row[QLR_STREAMDUP_HOSTNAME], 1111));
+      keys.push_back(std::make_pair(row[QLR_MASTERBOX_HOSTNAME], 2222));
+      if (row[QLR_STREAMER_HOSTNAME] != NULL)
+      {
+        keys.push_back(std::make_pair(row[QLR_STREAMER_HOSTNAME], 3333));
+        keys.push_back(std::make_pair(row[QLR_STREAMER_HOSTNAME], 4444));
       }
 
       connections_t::iterator itConnections;
@@ -200,17 +316,12 @@ int MonitorConfiguration::loadStreamList()
         itConnections = this->connections.find(*itKeys);
         if (itConnections == this->connections.end())
         {
+          LogError::getInstance().sysLog(DEBUG, "create connection to %s:%u", (*itKeys).first.c_str(), (*itKeys).second);
           boost::shared_ptr<LivecastConnection> connection = this->createConnection((*itKeys).first, (*itKeys).second);
           itConnections = this->connections.insert(std::make_pair(*itKeys, connection)).first;
         }
-        StreamInfos::server_t server((*itKeys).first.c_str(), (*itKeys).second, 
-                                     (*itKeys).second == 1111 ? StreamInfos::server_t::STREAM_DUP : 
-                                     (*itKeys).second == 2222 ? StreamInfos::server_t::MASTER_BOX : 
-                                     (*itKeys).second == 3333 ? StreamInfos::server_t::STREAMER_RTMP : 
-                                     (*itKeys).second == 4444 ? StreamInfos::server_t::STREAMER_HLS : 
-                                     StreamInfos::server_t::UNKNOWN);
-        it->second->addServer(server, row[1][0] == '0');
       }
+
     }
 
   } while (row != 0);

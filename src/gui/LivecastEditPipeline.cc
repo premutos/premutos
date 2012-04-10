@@ -20,14 +20,13 @@ LivecastEditPipeline::LivecastEditPipeline(wxWindow * parent,
   wxButton * save = new wxButton(control, wxID_APPLY, "Save");
  
   wxBoxSizer * hbox = new wxBoxSizer(wxHORIZONTAL);  
-  hbox->Add(reset, 0, wxALIGN_CENTRE | wxRIGHT, 10);
-  hbox->Add(save, 0, wxALIGN_CENTRE | wxLEFT, 10);
+  hbox->Add(reset, 0, wxALIGN_CENTRE | wxRIGHT, 5);
+  hbox->Add(save, 0, wxALIGN_CENTRE | wxLEFT, 5);
   control->SetSizer(hbox);
   
   wxBoxSizer * vbox = new wxBoxSizer(wxVERTICAL);
-  vbox->Add(this->textCtrl, 1, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, 10);
-  vbox->Add(-1, 25);
-  vbox->Add(control, 0, wxALIGN_CENTER | wxBOTTOM, 10);
+  vbox->Add(this->textCtrl, 1, wxEXPAND, 0);
+  vbox->Add(control, 0, wxALIGN_CENTER | wxTOP | wxBOTTOM, 5);
   this->SetSizer(vbox);
   boost::shared_ptr<MonitorConfiguration> cfg = this->monitor->getConfiguration();
   *this->textCtrl << cfg->getPipeline(this->streamId);

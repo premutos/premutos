@@ -1,5 +1,7 @@
 #include "../lib/Log.hh"
 #include "LivecastConnection.hh"
+#include "MonitorConfiguration.hh"
+#include "ResultCallbackIntf.hh"
 #include <iostream>
 #include <boost/bind.hpp>
 #include <boost/algorithm/string/erase.hpp>

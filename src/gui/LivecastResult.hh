@@ -5,9 +5,6 @@
 #include "../monitor/MonitorConfiguration.hh"
 #include "../monitor/LivecastMonitor.hh"
 #include "../monitor/StreamInfos.hh"
-#include "LivecastStatus.hh"
-#include "LivecastInfos.hh"
-#include "LivecastListCtrl.hh"
 
 #include <wx/wx.h>
 #include <wx/listctrl.h>
@@ -22,6 +19,8 @@ namespace livecast {
 namespace gui {
 
 class LivecastGui;
+class LivecastInfos;
+class LivecastListCtrl;
 
 class LivecastResult : public wxPanel,
                        public boost::enable_shared_from_this<LivecastResult>
@@ -31,8 +30,6 @@ public:
   ~LivecastResult();
 
   std::list<unsigned int> getStreamsSelected() const;
-  boost::shared_ptr<LivecastStatus> getStreamStatus(unsigned int streamId);
-  int removeStreamStatus(unsigned int streamId);  
 
   const wxEventType streamsListEvent;  
   const wxEventType checkStreamEvent;  
@@ -40,9 +37,10 @@ public:
 private:
   void onStreamListUpdate(wxCommandEvent& ev);
   void onCheckStream(wxCommandEvent& ev);
-  void onRefresh(wxCommandEvent& ev);
   void onStreamListDblClicked(wxListEvent& ev);
-  void onStreamListItemSelected(wxListEvent& ev);
+  void onStreamListItemActivated(wxListEvent& ev);
+  void onStatusListRightClicked(wxListEvent& event);
+  void onPopupClick(wxCommandEvent& event);
   void updateItem(livecast::monitor::MonitorConfiguration::map_streams_infos_t::const_iterator& it);
 
   void onPaint(wxPaintEvent& ev);
@@ -54,9 +52,6 @@ private:
   wxSplitterWindow * splitter;
   LivecastListCtrl * list;
   LivecastInfos * infos;
-
-  typedef std::map<unsigned int, boost::shared_ptr<LivecastStatus> > status_frames_t;
-  status_frames_t statusFrames;
   
   mutable boost::mutex mutex;
 };

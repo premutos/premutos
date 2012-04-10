@@ -3,12 +3,23 @@
 #include "LivecastResult.hh"
 #include "LivecastGui.hh"
 #include "LivecastStatus.hh"
+#include "LivecastInfos.hh"
+#include "LivecastListCtrl.hh"
+#include "LivecastEditPipeline.hh"
 #include "GuiConfiguration.hh"
 
 #include <boost/property_tree/xml_parser.hpp>
 
 namespace livecast {
 namespace gui {
+
+enum popup_menu_t
+{
+  POPUP_INFOS = 1,
+  POPUP_STATUS_DETAILS,
+  POPUP_PIPELINE,
+  POPUP_REINIT,
+};
 
 enum column_id_t
 {
@@ -53,9 +64,10 @@ wxString LivecastListCtrlVirtual::OnGetItemText(long item, long column) const
 
   const char * value;
   std::ostringstream oss;
-  MonitorConfiguration::map_streams_infos_t::const_iterator it = this->monitor->getStreams().begin();
+  boost::shared_ptr<MonitorConfiguration> cfg = this->monitor->getConfiguration();
+  MonitorConfiguration::map_streams_infos_t::const_iterator it = cfg->getStreamsInfos().begin();
   std::advance(it, item);
-  if (it != this->monitor->getStreams().end())
+  if (it != cfg->getStreamsInfos().end())
   {
     switch (column)
     {
@@ -84,9 +96,10 @@ wxListItemAttr * LivecastListCtrlVirtual::OnGetItemAttr(long item) const
 {
   wxColour fgColour;
   wxColour bgColour;
-  MonitorConfiguration::map_streams_infos_t::const_iterator it = this->monitor->getStreams().begin();
+  boost::shared_ptr<MonitorConfiguration> cfg = this->monitor->getConfiguration();
+  MonitorConfiguration::map_streams_infos_t::const_iterator it = cfg->getStreamsInfos().begin();
   std::advance(it, item);
-  if (it != this->monitor->getStreams().end())
+  if (it != cfg->getStreamsInfos().end())
   {
     switch (it->second->getStatus())
     {  
@@ -141,12 +154,12 @@ LivecastResult::LivecastResult(wxWindow * parent, LivecastGui * livecastGui, boo
   this->splitter->Initialize(this->list);
 
   wxBoxSizer * box = new wxBoxSizer(wxHORIZONTAL);
-  box->Add(this->splitter, 1, wxEXPAND | wxALL, 10);
+  box->Add(this->splitter, 1, wxEXPAND | wxALL, 0);
   this->SetSizer(box);
   
-  this->Bind(wxEVT_COMMAND_LIST_ITEM_ACTIVATED, &LivecastResult::onStreamListDblClicked, this, wxID_ANY);
-  this->Bind(wxEVT_COMMAND_LIST_ITEM_SELECTED, &LivecastResult::onStreamListItemSelected, this, wxID_ANY);
-  this->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &LivecastResult::onRefresh, this, wxID_APPLY);
+  this->list->Bind(wxEVT_COMMAND_LIST_ITEM_ACTIVATED, &LivecastResult::onStreamListDblClicked, this, wxID_ANY);
+  this->list->Bind(wxEVT_COMMAND_LIST_ITEM_ACTIVATED, &LivecastResult::onStreamListItemActivated, this, wxID_ANY);
+  this->list->Bind(wxEVT_COMMAND_LIST_ITEM_RIGHT_CLICK, &LivecastResult::onStatusListRightClicked, this, wxID_ANY);
   this->Connect(streamsListEvent, wxCommandEventHandler(LivecastResult::onStreamListUpdate));
   this->Connect(checkStreamEvent, wxCommandEventHandler(LivecastResult::onCheckStream));
 }
@@ -168,70 +181,20 @@ std::list<unsigned int> LivecastResult::getStreamsSelected() const
   return lId;
 }
 
-boost::shared_ptr<LivecastStatus> LivecastResult::getStreamStatus(unsigned int streamId)
-{
-  status_frames_t::iterator it = this->statusFrames.find(streamId);
-  try
-  {
-    if (it == this->statusFrames.end())
-    {
-      LogError::getInstance().sysLog(DEBUG, "create status frame %d", streamId);
-      std::ostringstream oss;
-      oss << "status of stream " << streamId;
-      boost::shared_ptr<StreamInfos> streamInfos = this->monitor->getStreamInfos(streamId);
-      boost::shared_ptr<LivecastStatus> statusFrame(new LivecastStatus(this, oss.str(), streamInfos));
-      statusFrame->Centre();
-      statusFrame->Show();
-      std::pair<status_frames_t::iterator, bool> res = this->statusFrames.insert(std::make_pair(streamId, statusFrame));
-      if (res.second)
-      {
-        it = res.first;
-      }
-      else
-      {
-        assert(false);
-        LogError::getInstance().sysLog(CRITICAL, "cannot find informations for stream id %u", streamId);
-        exit(-1);
-      }
-    }
-  }
-  catch (const StreamInfosException& ex)
-  {
-    LogError::getInstance().sysLog(ERROR, "cannot load information for stream id %u", streamId);
-  }
-  // fixme
-  return it->second;
-}
-
-int LivecastResult::removeStreamStatus(unsigned int streamId)
-{
-  int rc = 0;
-  status_frames_t::iterator it = this->statusFrames.find(streamId);
-  if (it != this->statusFrames.end())
-  {
-    this->statusFrames.erase(it);
-  }
-  else
-  {
-    rc = -1;
-    LogError::getInstance().sysLog(ERROR, "cannot find status for stream id %d", streamId);
-  }
-  return rc;
-}
-
 void LivecastResult::onStreamListUpdate(wxCommandEvent& WXUNUSED(event))
 {
+  boost::shared_ptr<MonitorConfiguration> cfg = this->monitor->getConfiguration();
   if (this->list->IsVirtual())
   {
-    LogError::getInstance().sysLog(ERROR, "stream list update [size : %d]", this->monitor->getStreams().size());
-    this->list->SetItemCount(this->monitor->getStreams().size());
+    LogError::getInstance().sysLog(ERROR, "stream list update [size : %d]", cfg->getStreamsInfos().size());
+    this->list->SetItemCount(cfg->getStreamsInfos().size());
   }
   else
   {
     this->list->DeleteAllItems();
-    for (MonitorConfiguration::map_streams_infos_t::const_iterator it = this->monitor->getStreams().begin(); it != this->monitor->getStreams().end(); ++it)
+    for (MonitorConfiguration::map_streams_infos_t::const_iterator it = cfg->getStreamsInfos().begin(); it != cfg->getStreamsInfos().end(); ++it)
     {
-      unsigned int n = std::distance(MonitorConfiguration::map_streams_infos_t::const_iterator(this->monitor->getStreams().begin()), it);
+      unsigned int n = std::distance(MonitorConfiguration::map_streams_infos_t::const_iterator(cfg->getStreamsInfos().begin()), it);
       wxListItem item;
       item.SetId(n);
       item.SetData(it->second->getId());
@@ -246,11 +209,12 @@ void LivecastResult::onStreamListDblClicked(wxListEvent& event)
 {
   LogError::getInstance().sysLog(DEBUG, "double click on item %d with data %d", event.GetIndex(), event.GetItem().GetData());
 
+  boost::shared_ptr<MonitorConfiguration> cfg = this->monitor->getConfiguration();
   if (this->list->IsVirtual())
   {
-    MonitorConfiguration::map_streams_infos_t::const_iterator it = this->monitor->getStreams().begin();
+    MonitorConfiguration::map_streams_infos_t::const_iterator it = cfg->getStreamsInfos().begin();
     std::advance(it, event.GetIndex());
-    if (it != this->monitor->getStreams().end())
+    if (it != cfg->getStreamsInfos().end())
     {
       this->livecastGui->check(it->second->getId());
     }
@@ -261,12 +225,13 @@ void LivecastResult::onStreamListDblClicked(wxListEvent& event)
   }
 }
 
-void LivecastResult::onStreamListItemSelected(wxListEvent& event)
+void LivecastResult::onStreamListItemActivated(wxListEvent& event)
 {
   LogError::getInstance().sysLog(DEBUG, "item %d with data %d is selected", event.GetIndex(), event.GetItem().GetData());
-  MonitorConfiguration::map_streams_infos_t::const_iterator it = this->monitor->getStreams().begin();
+  boost::shared_ptr<MonitorConfiguration> cfg = this->monitor->getConfiguration();
+  MonitorConfiguration::map_streams_infos_t::const_iterator it = cfg->getStreamsInfos().begin();
   std::advance(it, event.GetIndex());
-  assert(it != this->monitor->getStreams().end());
+  assert(it != cfg->getStreamsInfos().end());
   this->infos->setInfos(it->second);
   this->infos->Show(true);
   this->splitter->SplitHorizontally(this->list, this->infos, 0);
@@ -275,12 +240,13 @@ void LivecastResult::onStreamListItemSelected(wxListEvent& event)
 void LivecastResult::onCheckStream(wxCommandEvent& event)
 {
   unsigned int streamId = (unsigned int)event.GetInt();
-  MonitorConfiguration::map_streams_infos_t::const_iterator it = this->monitor->getStreams().find(streamId);
-  assert(it != this->monitor->getStreams().end());
+  boost::shared_ptr<MonitorConfiguration> cfg = this->monitor->getConfiguration();
+  MonitorConfiguration::map_streams_infos_t::const_iterator it = cfg->getStreamsInfos().find(streamId);
+  assert(it != cfg->getStreamsInfos().end());
 
   if (this->list->IsVirtual())
   {
-    unsigned int n = std::distance(MonitorConfiguration::map_streams_infos_t::const_iterator(this->monitor->getStreams().begin()), it);
+    unsigned int n = std::distance(MonitorConfiguration::map_streams_infos_t::const_iterator(cfg->getStreamsInfos().begin()), it);
     this->list->RefreshItem(n);
   }
   else
@@ -289,14 +255,74 @@ void LivecastResult::onCheckStream(wxCommandEvent& event)
   }
 }
 
-void LivecastResult::onRefresh(wxCommandEvent& WXUNUSED(event))
+void LivecastResult::onStatusListRightClicked(wxListEvent& event)
 {
-  LogError::getInstance().sysLog(DEBUG, "refresh");
+  LogError::getInstance().sysLog(DEBUG, "right click on stream %u", event.GetItem().GetData());
+  void *data = reinterpret_cast<void *>(event.GetItem().GetData());
+	wxMenu menu;
+  menu.SetClientData(data);
+	menu.Append(POPUP_INFOS, "Get Infos");
+	menu.Append(POPUP_STATUS_DETAILS, "Get Stream Status Details");
+	menu.Append(POPUP_PIPELINE, "Edit Stream Pipeline");
+	menu.Append(POPUP_REINIT, "Reinit Stream");
+  menu.Bind(wxEVT_COMMAND_MENU_SELECTED, &LivecastResult::onPopupClick, this, wxID_ANY);
+	this->PopupMenu(&menu);
+}
+
+void LivecastResult::onPopupClick(wxCommandEvent& event)
+{
+  boost::shared_ptr<MonitorConfiguration> cfg = this->monitor->getConfiguration();
+  unsigned int streamId = reinterpret_cast<long>(static_cast<wxMenu *>(event.GetEventObject())->GetClientData());
+	switch(event.GetId()) 
+  {
+  case POPUP_INFOS:
+  {
+    LogError::getInstance().sysLog(DEBUG, "popup infos %u", streamId);
+    MonitorConfiguration::map_streams_infos_t::const_iterator it = cfg->getStreamsInfos().find(streamId);
+    assert(it != cfg->getStreamsInfos().end());
+    this->infos->setInfos(it->second);
+    this->infos->Show(true);
+    this->splitter->SplitHorizontally(this->list, this->infos, 0);
+  }
+  break;
+  case POPUP_STATUS_DETAILS:
+  {
+    this->livecastGui->check(streamId);
+  }
+  break;
+  case POPUP_PIPELINE:
+  {
+    LogError::getInstance().sysLog(DEBUG, "popup edit pipeline %u", streamId);
+    std::ostringstream title;
+    title << "Edit pipeline of stream " << streamId;
+    LivecastEditPipeline * editPipeline = new LivecastEditPipeline(this->livecastGui, this->monitor, streamId);
+    this->livecastGui->addTab(editPipeline, title.str().c_str());
+  }
+  break;
+  case POPUP_REINIT:
+  {
+    LogError::getInstance().sysLog(DEBUG, "popup reinit %u", streamId);
+    std::ostringstream title;
+    title << "you are going to reinit stream " << streamId;
+    wxDialog * dlg = new wxMessageDialog(this, title.str(), title.str(), wxOK | wxCANCEL | wxCENTRE);
+    if (dlg->ShowModal() == wxID_OK)
+    {
+      LogError::getInstance().sysLog(ERROR, "reinit %u", streamId);
+    }
+    else
+    {
+      LogError::getInstance().sysLog(ERROR, "do not reinit %u", streamId);
+    }
+    dlg->Destroy();
+  }
+  break;
+	}
 }
 
 void LivecastResult::updateItem(MonitorConfiguration::map_streams_infos_t::const_iterator& it)
 {
-  unsigned int n = std::distance(MonitorConfiguration::map_streams_infos_t::const_iterator(this->monitor->getStreams().begin()), it);
+  boost::shared_ptr<MonitorConfiguration> cfg = this->monitor->getConfiguration();
+  unsigned int n = std::distance(MonitorConfiguration::map_streams_infos_t::const_iterator(cfg->getStreamsInfos().begin()), it);
   
   this->list->SetItemTextColour(n, it->second->getStatus());
   this->list->SetItemBackgroundColour(n, wxColour(wxColour(((n % 2) == 0) ? lightYellow : lightBlue)));

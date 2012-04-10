@@ -7,6 +7,7 @@ liblivecast_admin_gui_la_CXXFLAGS = \
 liblivecast_admin_gui_la_SOURCES = \
 	GuiConfiguration.cc \
 	LivecastControl.cc \
+	LivecastEditPipeline.cc \
 	LivecastGui.cc \
 	LivecastInfos.cc \
 	LivecastListCtrl.cc \
@@ -15,4 +16,5 @@ liblivecast_admin_gui_la_SOURCES = \
 	LivecastStatus.cc \
 	LivecastTaskBarIcon.cc \
 	ResultCallback.cc \
+	StatusSchema.cc \
 	Util.cc

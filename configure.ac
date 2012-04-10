@@ -61,7 +61,7 @@ LIBS="$LIBS $MYSQL_LIBS"
 #
 # wx widget
 CXXFLAGS="$CXXFLAGS -I/usr/local/lib/wx/include/gtk2-unicode-2.9/ -I/usr/local/include/wx-2.9/gtk2-ansi-release-2.9 -I/usr/local/include/wx-2.9 -DGTK_NO_CHECK_CASTS -D__WXGTK__ -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES -DNO_GCC_PRAGMA"
-LIBS="$LIBS -L/usr/local/lib -pthread -liconv -lwx_gtk2u_xrc-2.9 -lwx_gtk2u_qa-2.9 -lwx_gtk2u_html-2.9 -lwx_gtk2u_adv-2.9 -lwx_gtk2u_core-2.9 -lwx_baseu_xml-2.9 -lwx_baseu_net-2.9 -lwx_baseu-2.9"
+LIBS="$LIBS -L/usr/local/lib -pthread -liconv -lwx_gtk2u_xrc-2.9 -lwx_gtk2u_qa-2.9 -lwx_gtk2u_html-2.9 -lwx_gtk2u_adv-2.9 -lwx_gtk2u_core-2.9 -lwx_baseu_xml-2.9 -lwx_baseu_net-2.9 -lwx_baseu-2.9 -lwx_gtk2u_aui-2.9"
 
 #
 # valgrind
@@ -116,5 +116,6 @@ AC_CONFIG_FILES([
   src/lib/Makefile
   src/monitor/Makefile
   doc/Makefile
+  tests/Makefile
 ])
 AC_OUTPUT

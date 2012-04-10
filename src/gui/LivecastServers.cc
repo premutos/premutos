@@ -1,7 +1,10 @@
 #include "Util.hh"
+#include "LivecastListCtrl.hh"
 #include "LivecastServers.hh"
 #include "LivecastInfos.hh"
 #include "../monitor/LivecastMonitor.hh"
+#include "../monitor/LivecastConnection.hh"
+#include "../monitor/MonitorConfiguration.hh"
 #include "../lib/Log.hh"
 
 #include <boost/tokenizer.hpp>
@@ -10,6 +13,12 @@
 using namespace livecast;
 using namespace livecast::gui;
 using namespace livecast::monitor;
+
+enum popup_menu_t
+{
+  POPUP_INFOS_DETAILS = 1,
+  POPUP_REINIT,
+};
 
 LivecastServers::LivecastServers(wxWindow * parent, boost::shared_ptr<livecast::monitor::LivecastMonitor> monitor)
   : wxPanel(parent, wxID_ANY),
@@ -26,7 +35,7 @@ LivecastServers::LivecastServers(wxWindow * parent, boost::shared_ptr<livecast::
   this->servers->InsertColumn(colIndex++, "ip", wxLIST_FORMAT_LEFT);
   this->servers->InsertColumn(colIndex++, "admin port", wxLIST_FORMAT_LEFT);
 
-  this->results = new wxNotebook(this->splitter, wxID_ANY);
+  this->results = new wxAuiNotebook(this->splitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_NB_TOP);
   this->statusList = new LivecastListCtrl(this->results);
   colIndex = 0;
   this->statusList->InsertColumn(colIndex++, "host", wxLIST_FORMAT_LEFT);
@@ -39,11 +48,13 @@ LivecastServers::LivecastServers(wxWindow * parent, boost::shared_ptr<livecast::
   this->splitter->Initialize(this->servers);
 
   wxBoxSizer * box = new wxBoxSizer(wxVERTICAL);
-  box->Add(this->splitter, 1, wxEXPAND | wxALL, 10);
+  box->Add(this->splitter, 1, wxEXPAND | wxALL, 0);
   this->SetSizer(box);
 
   this->servers->Bind(wxEVT_COMMAND_LIST_ITEM_ACTIVATED, &LivecastServers::onServersListDblClicked, this, wxID_ANY);
-  this->results->Bind(wxEVT_COMMAND_LIST_ITEM_ACTIVATED, &LivecastServers::onResultsListDblClicked, this, wxID_ANY);
+  this->statusList->Bind(wxEVT_COMMAND_LIST_ITEM_ACTIVATED, &LivecastServers::onResultsListDblClicked, this, wxID_ANY);
+  this->statusList->Bind(wxEVT_COMMAND_LIST_ITEM_RIGHT_CLICK, &LivecastServers::onStatusListRightClicked, this, wxID_ANY);
+  this->results->Bind(wxEVT_COMMAND_AUINOTEBOOK_TAB_MIDDLE_UP, &LivecastServers::onTabMiddleUp, this, wxID_ANY);
   this->Connect(serversListEvent, wxCommandEventHandler(LivecastServers::onServersListUpdate));
 
   this->Show(true);
@@ -80,16 +91,50 @@ void LivecastServers::onServersListUpdate(wxCommandEvent& WXUNUSED(event))
   this->refresh();
 }
 
+void LivecastServers::onStatusListRightClicked(wxListEvent& event)
+{
+  LogError::getInstance().sysLog(DEBUG, "right click on stream %u", event.GetItem().GetData());
+  void *data = reinterpret_cast<void *>(event.GetItem().GetData());
+	wxMenu menu;
+  menu.SetClientData(data);
+	menu.Append(POPUP_INFOS_DETAILS, "Get More Details");
+	menu.Append(POPUP_REINIT, "Reinit Stream");
+  menu.Bind(wxEVT_COMMAND_MENU_SELECTED, &LivecastServers::onPopupClick, this, wxID_ANY);
+	this->PopupMenu(&menu);
+}
+
+void LivecastServers::onPopupClick(wxCommandEvent& event)
+{
+  unsigned int streamId = reinterpret_cast<long>(static_cast<wxMenu *>(event.GetEventObject())->GetClientData());
+	switch(event.GetId()) 
+  {
+		case POPUP_INFOS_DETAILS:
+      LogError::getInstance().sysLog(ERROR, "popup infos details %u", streamId);
+			break;
+		case POPUP_REINIT:
+      LogError::getInstance().sysLog(ERROR, "popup reinit %u", streamId);
+			break;
+	}
+}
+
+void LivecastServers::onTabMiddleUp(wxAuiNotebookEvent& event)
+{
+  if (event.GetSelection() > 0)
+  {
+    this->results->DeletePage(event.GetSelection());
+  }
+}
+
 void LivecastServers::onServersListDblClicked(wxListEvent& event)
 {
   LogError::getInstance().sysLog(DEBUG, "double click on server item %d", event.GetIndex());
   const MonitorConfiguration::connections_t& conns = this->monitor->getConfiguration()->getConnections();
   MonitorConfiguration::connections_t::const_iterator it = conns.begin();
   std::advance(it, event.GetIndex());
+  assert(it != conns.end());
 
   // clean
   this->statusList->DeleteAllItems();
-  this->statusDetails.clear();
   for (unsigned int p = this->results->GetPageCount() - 1; p > 0; p--)
   {
     this->results->DeletePage(p);
@@ -106,7 +151,6 @@ void LivecastServers::onServersListDblClicked(wxListEvent& event)
     this->fillList(this->statusList, *result);
     this->results->Show(true);
     this->splitter->SplitHorizontally(this->servers, this->results, 0);
-
   }
 }
 
@@ -117,16 +161,9 @@ void LivecastServers::onResultsListDblClicked(wxListEvent& event)
   try
   {
     unsigned int streamId = boost::lexical_cast<unsigned int>(this->statusList->GetItemText(event.GetIndex(), 2));
-
-    if (this->statusDetails.find(streamId) != this->statusDetails.end())
-    {
-      return;
-    }
-
     bool detail = true;
     boost::shared_ptr<boost::property_tree::ptree> result(new boost::property_tree::ptree);  
-    this->connectionTmp->check(streamId, result, detail);
-
+    this->connectionTmp->check(streamId, result, detail);      
     LivecastListCtrl * list = new LivecastListCtrl(this->results);
     unsigned int colIndex = 0;
     list->InsertColumn(colIndex++, "host", wxLIST_FORMAT_LEFT);
@@ -137,7 +174,6 @@ void LivecastServers::onResultsListDblClicked(wxListEvent& event)
     std::ostringstream title;
     title << "status details " << streamId;
     this->results->InsertPage(this->results->GetPageCount(), list, title.str(), true);
-    this->statusDetails.insert(std::make_pair(streamId, list));
   }
   catch (boost::bad_lexical_cast& ex)
   {
@@ -160,19 +196,24 @@ void LivecastServers::fillList(LivecastListCtrl * list, boost::property_tree::pt
     unsigned int index = 0;
     for (tokenizer::iterator it = tok.begin(); it != tok.end(); ++it)
     {
+      std::string streamId;
+      std::string statusStr;
+      const std::string::size_type pos = (*it).find(" ");
+      if (pos != std::string::npos)
+      {
+        streamId = (*it).substr(0, pos);
+        statusStr = (*it).substr(pos + 1);
+      }
+      
       wxListItem item;
       item.SetId(index);
+      item.SetData(boost::lexical_cast<long>(streamId.c_str()));
       list->InsertItem(item);
-      boost::char_separator<char> sep2(" ");
-      tokenizer tok2(*it, sep2);
 
       list->SetItem(index, 0, this->host.c_str());
       list->SetItem(index, 1, this->type.c_str());
-      unsigned int col = 2;
-      for (tokenizer::iterator it2 = tok2.begin(); (col < 4) && (it2 != tok2.end()); ++it2)
-      {
-        list->SetItem(index, col++, (*it2).c_str());
-      }
+      list->SetItem(index, 2, streamId.c_str());
+      list->SetItem(index, 3, statusStr.c_str());
 
       StreamInfos::status_t status = StreamInfos::parseStatus(*it);
       list->SetItemTextColour(index, status);
@@ -181,3 +222,4 @@ void LivecastServers::fillList(LivecastListCtrl * list, boost::property_tree::pt
     }
   }
 }
+

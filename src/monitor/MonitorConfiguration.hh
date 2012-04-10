@@ -6,10 +6,11 @@
 #include <string>
 #include <boost/shared_ptr.hpp>
 
-#include "StreamInfos.hh"
-
 namespace livecast {
 namespace monitor {
+
+class StreamInfos;
+class LivecastConnection;
 
 class MonitorConfiguration
 {
@@ -41,6 +42,7 @@ public:
   boost::shared_ptr<LivecastConnection> getConnection(const std::string& host, uint16_t port);
 
   int load(StreamInfos& streamInfos) const;
+  std::string getPipeline(unsigned int streamId) const;
   
 protected:
   virtual boost::shared_ptr<LivecastConnection> createConnection(const std::string& host, uint16_t port) const = 0;

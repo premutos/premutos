@@ -1,18 +1,19 @@
 #ifndef __LIVECAST_CONNECTION_HH__
 #define __LIVECAST_CONNECTION_HH__
 
-#include "MonitorConfiguration.hh"
-#include "ResultCallbackIntf.hh"
-
 #include <string>
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/asio.hpp>
 #include <boost/asio/deadline_timer.hpp>
 #include <boost/thread/condition_variable.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 namespace livecast {
 namespace monitor {
+
+class MonitorConfiguration;
+class ResultCallbackIntf;
 
 class LivecastConnectionException
 {

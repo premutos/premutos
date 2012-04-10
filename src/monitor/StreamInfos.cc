@@ -2,6 +2,7 @@
 #include "StreamInfos.hh"
 #include "LivecastConnection.hh"
 #include "MonitorConfiguration.hh"
+#include "ResultCallbackIntf.hh"
 
 #include <iostream>
 #include <boost/property_tree/xml_parser.hpp>
@@ -43,25 +44,19 @@ void StreamInfos::check(boost::shared_ptr<ResultCallbackIntf> resultCb,
   boost::property_tree::ptree ptree;
   for (int i = 0; i < 2; i++)
   {
+
     boost::shared_ptr<boost::property_tree::ptree> statusHost(new boost::property_tree::ptree);
     for (int j = 0; j < 3; j++)
     {
       for (std::list<server_t>::iterator it = this->servers[i][j].begin(); it != this->servers[i][j].end(); ++it)
       {
-        boost::shared_ptr<LivecastConnection> conn = cfg->getConnection((*it).host, (*it).port);
+        boost::shared_ptr<LivecastConnection> conn = cfg->getConnection((*it).host, (*it).adminPort);
         conn->check(this->streamId, statusHost);
 
-//         std::cout << std::endl
-//                   << "============================="
-//                   << std::endl;
-//         boost::property_tree::write_xml(std::cout, *statusHost);
-//         std::cout << std::endl
-//                   << "============================="
-//                   << std::endl;
-
-        for (boost::property_tree::ptree::const_iterator itResult = statusHost->get_child("").begin(); 
+        for (boost::property_tree::ptree::iterator itResult = statusHost->get_child("").begin();
              itResult != statusHost->get_child("").end(); ++itResult)
         {
+          if (itResult->first != (*it).host) continue;
           const std::string status = itResult->second.get<std::string>("result");
           LogError::getInstance().sysLog(DEBUG, "find result: status => '%s'", status.c_str());
           if (status.find("WAITING") != std::string::npos)
@@ -88,9 +83,24 @@ void StreamInfos::check(boost::shared_ptr<ResultCallbackIntf> resultCb,
           {
             (*it).status = StreamInfos::STATUS_ERROR;
           }
+
+          itResult->second.put("protocol", (*it).protocol);
+          itResult->second.put("port", (*it).port);
+          itResult->second.put("leaf", (*it).leaf ? "true" : "false");
+
         }
+
       }
     }
+
+//     std::cout << std::endl
+//               << "============================="
+//               << std::endl;
+//     boost::property_tree::write_xml(std::cout, *statusHost);
+//     std::cout << std::endl
+//               << "============================="
+//               << std::endl;
+
     const std::string wing = (i == 0) ? "primary" : "backup" ;
     ptree.put_child(wing.c_str(), *statusHost);
   }

@@ -1,6 +1,7 @@
 #include "../lib/Log.hh"
 #include "LivecastStatus.hh"
 #include "LivecastResult.hh"
+#include "StatusSchema.hh"
 
 #include <wx/splitter.h>
 
@@ -10,101 +11,25 @@ using namespace livecast;
 using namespace livecast::monitor;
 using namespace livecast::gui;
 
-LivecastStatus::LivecastStatus(LivecastResult * livecastResult, const std::string& windowName, boost::shared_ptr<StreamInfos> streamInfos)
-  : wxFrame(livecastResult, 
-            wxID_ANY, 
-            windowName,
-            wxDefaultPosition, 
-            wxSize(600, 400)),
+LivecastStatus::LivecastStatus(wxWindow * parent, boost::shared_ptr<StreamInfos> streamInfos)
+  : wxPanel(parent, wxID_ANY),
     checkStreamEvent(wxNewEventType()),
     streamId(streamInfos->getId()),
-    livecastResult(livecastResult),
     streamInfos(streamInfos)
 { 
-  wxSplitterWindow * hSplitter = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_BORDER);  
-  this->infos = new wxPanel(hSplitter, wxID_ANY);
-  this->status = new wxPanel(hSplitter, wxID_ANY);
+  wxSplitterWindow * splitter = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_BORDER);
+  this->statusSchema = new StatusSchema(splitter);
+  this->tree = new wxTreeCtrl(splitter, wxID_ANY);
+  splitter->SplitVertically(this->tree, this->statusSchema, this->GetParent()->GetSize().GetWidth() / 2);
 
-  wxSplitterWindow * vSplitter = new wxSplitterWindow(this->status, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_BORDER);
-  this->schema = new wxPanel(vSplitter, wxID_ANY);
-  this->tree = new wxTreeCtrl(vSplitter, wxID_ANY);
-  vSplitter->SplitHorizontally(this->schema, this->tree, 200);
   wxBoxSizer * box = new wxBoxSizer(wxHORIZONTAL);
-  box->Add(vSplitter, 1, wxEXPAND | wxALL, 10);
-  
-  this->status->SetSizer(box);
-  {
-    wxStaticText * id = new wxStaticText(this->infos, wxID_ANY, wxT("Id"));
-    wxStaticText * mode = new wxStaticText(this->infos, wxID_ANY, wxT("Mode"));
-    wxStaticText * srcIp = new wxStaticText(this->infos, wxID_ANY, wxT("Source IP"));
-    wxStaticText * dstHost = new wxStaticText(this->infos, wxID_ANY, wxT("Destination hostname"));
-    wxStaticText * dstPort = new wxStaticText(this->infos, wxID_ANY, wxT("Destination port"));
-    wxStaticText * protocol = new wxStaticText(this->infos, wxID_ANY, wxT("Protocol"));
-    wxStaticText * extKey = new wxStaticText(this->infos, wxID_ANY, wxT("External key"));
-    wxStaticText * backlog = new wxStaticText(this->infos, wxID_ANY, wxT("Backlog"));
-    wxStaticText * nbConnections = new wxStaticText(this->infos, wxID_ANY, wxT("Nb connections"));
-    wxStaticText * enabled = new wxStaticText(this->infos, wxID_ANY, wxT("Enabled"));
-    wxStaticText * disableFilter = new wxStaticText(this->infos, wxID_ANY, wxT("Disable filter"));
-
-    this->idValue = new wxStaticText(this->infos, wxID_ANY, streamInfos->infos[StreamInfos::FIELDS_ID].c_str());
-    this->modeValue = new wxStaticText(this->infos, wxID_ANY, streamInfos->infos[StreamInfos::FIELDS_MODE].c_str());
-    this->srcIpValue = new wxStaticText(this->infos, wxID_ANY, streamInfos->infos[StreamInfos::FIELDS_SRC_IP].c_str());
-    this->dstHostValue = new wxStaticText(this->infos, wxID_ANY, streamInfos->infos[StreamInfos::FIELDS_DST_HOST].c_str());
-    this->dstPortValue = new wxStaticText(this->infos, wxID_ANY, streamInfos->infos[StreamInfos::FIELDS_DST_PORT].c_str());
-    this->protocolValue = new wxStaticText(this->infos, wxID_ANY, streamInfos->infos[StreamInfos::FIELDS_PROTOCOL].c_str());
-    this->extKeyValue = new wxStaticText(this->infos, wxID_ANY, streamInfos->infos[StreamInfos::FIELDS_EXT_KEY].c_str());
-    this->backlogValue = new wxStaticText(this->infos, wxID_ANY, streamInfos->infos[StreamInfos::FIELDS_BACKLOG].c_str());
-    this->nbConnectionsValue = new wxStaticText(this->infos, wxID_ANY, streamInfos->infos[StreamInfos::FIELDS_NB_CONNECTIONS].c_str());
-    this->enabledValue = new wxStaticText(this->infos, wxID_ANY, streamInfos->infos[StreamInfos::FIELDS_ENABLED].c_str());
-    this->disableFilterValue = new wxStaticText(this->infos, wxID_ANY, streamInfos->infos[StreamInfos::FIELDS_DISABLE_FILTER].c_str());
-
-    wxGridSizer * grid = new wxGridSizer(2, 12, 10);
-
-    grid->Add(id, 0);
-    grid->Add(this->idValue, 0);
-    grid->Add(mode, 0);
-    grid->Add(this->modeValue, 0);
-    grid->Add(srcIp, 0);
-    grid->Add(this->srcIpValue, 0);
-    grid->Add(dstHost, 0);
-    grid->Add(this->dstHostValue, 0);
-    grid->Add(dstPort, 0);
-    grid->Add(this->dstPortValue, 0);
-    grid->Add(protocol, 0);
-    grid->Add(this->protocolValue, 0);
-    grid->Add(extKey, 0);
-    grid->Add(this->extKeyValue, 0);
-    grid->Add(nbConnections, 0);
-    grid->Add(this->nbConnectionsValue, 0);
-    grid->Add(backlog, 0);
-    grid->Add(this->backlogValue, 0);
-    grid->Add(enabled, 0);
-    grid->Add(this->enabledValue, 0);
-    grid->Add(disableFilter, 0);
-    grid->Add(this->disableFilterValue, 0);
-
-    wxButton * button = new wxButton(this->infos, wxID_APPLY, wxT("Refresh"));
-    grid->Add(button, 0);
-    this->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &LivecastStatus::onRefresh, this, wxID_APPLY);
-
-    this->infos->SetSizer(grid);
-  }
-  
-  hSplitter->SplitVertically(this->infos, this->status, 300);
+  box->Add(splitter, 1, wxEXPAND | wxALL, 0);
+  this->SetSizer(box);
 
   this->Connect(checkStreamEvent, wxCommandEventHandler(LivecastStatus::onCheckStream));
-  this->Bind(wxEVT_CLOSE_WINDOW, &LivecastStatus::onCloseWindow, this, wxID_ANY);
 }
 
 LivecastStatus::~LivecastStatus()
-{
-}
-
-void LivecastStatus::commitStreamsList()
-{
-}
-
-void LivecastStatus::commitServersList()
 {
 }
 
@@ -136,21 +61,55 @@ wxTreeItemId LivecastStatus::updateTree(const boost::property_tree::ptree& ptree
 
 void LivecastStatus::onCheckStream(wxCommandEvent& ev)
 {
-  LogError::getInstance().sysLog(INFO, "get status of stream %d", ev.GetInt());
+  LogError::getInstance().sysLog(DEBUG, "get status of stream %d", ev.GetInt());
   this->tree->DeleteAllItems();
-  wxTreeItemId id = this->tree->AddRoot("servers");
-  this->updateTree(this->streamInfos->getResultTree(), id);
+  wxTreeItemId idTree = this->tree->AddRoot("servers");
+  this->updateTree(this->streamInfos->getResultTree(), idTree);
   this->tree->ExpandAll();  
+
+  //
+  const boost::property_tree::ptree& statusInfos = this->streamInfos->getResultTree();
+  unsigned int id = 0;
+  for (boost::property_tree::ptree::const_iterator it = statusInfos.get_child("status.primary").begin(); it != statusInfos.get_child("status.primary").end(); ++it)
+  {
+    const boost::optional<std::string> typeStr = it->second.get_optional<std::string>("type");
+    const boost::optional<std::string> statusStr = it->second.get_optional<std::string>("result");
+
+    StatusSchema::type_t type = ((*typeStr == "streamdup") ? StatusSchema::SERVER_STREAMDUP :
+                                 (*typeStr == "masterbox") ? StatusSchema::SERVER_MASTERBOX :
+                                 (*typeStr == "rtmp streamer") ? StatusSchema::SERVER_STREAMER_RTMP :
+                                 (*typeStr == "hls streamer") ? StatusSchema::SERVER_STREAMER_HLS :
+                                 StatusSchema::SERVER_UNKNOWN) ;
+    StatusSchema::status_t status = (((*statusStr).find("WAITING") != std::string::npos) ? StatusSchema::STATUS_WAITING :
+                                     ((*statusStr).find("INITIALIZING") != std::string::npos) ? StatusSchema::STATUS_INITIALIZING :
+                                     ((*statusStr).find("RUNNING") != std::string::npos) ? StatusSchema::STATUS_RUNNING :
+                                     ((*statusStr).find("ERROR") != std::string::npos) ? StatusSchema::STATUS_ERROR :
+                                     StatusSchema::STATUS_UNKNOWN) ;
+
+    boost::shared_ptr<StatusSchema::server_t> server(new StatusSchema::server_t);
+    server->id = id++;
+    server->hostname = it->first;
+    server->type = type;
+    server->status = status;
+    server->protocol = *(it->second.get_optional<std::string>("protocol"));
+    server->port = *(it->second.get_optional<unsigned int>("port"));
+    server->leaf = *(it->second.get_optional<bool>("leaf"));
+   
+    LogError::getInstance().sysLog(ERROR, "add server : [id:%d] [host:%s] [type:%d] [status:%d] [protocol:%s] [port:%u] [leaf:%d]",
+                                   server->id, server->hostname.c_str(), server->type, server->status, server->protocol.c_str(), server->port, server->leaf);
+
+//     LogError::getInstance().sysLog(DEBUG, "add server : [id:%d] [host:%s] [type:%d] [status:%d]",
+//                                    server->id, server->hostname.c_str(), server->type, server->status);
+
+    this->statusSchema->addServer(server);
+  }
+  this->statusSchema->linkAllServers();
+  wxPaintEvent event;
+  this->statusSchema->GetEventHandler()->AddPendingEvent(event);
 }
 
 void LivecastStatus::onRefresh(wxCommandEvent& ev)
 {
   LogError::getInstance().sysLog(DEBUG, "refresh");
   ev.Skip();
-}
-
-void LivecastStatus::onCloseWindow(wxCloseEvent& WXUNUSED(event))
-{
-  this->Destroy();
-  this->livecastResult->removeStreamStatus(this->streamId);
 }

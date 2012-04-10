@@ -9,9 +9,6 @@ namespace gui {
 class GuiConfiguration
 {
 public:
-  // static const GuiConfiguration * const getInstance();  
-  // static void setInstance(const GuiConfiguration * const cfg);
-
   static const boost::shared_ptr<GuiConfiguration> getInstance();  
   static void setInstance(const boost::shared_ptr<GuiConfiguration> cfg);
 

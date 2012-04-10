@@ -1,7 +1,12 @@
-#include "../lib/Log.hh"
 #include "LivecastMonitor.hh"
-#include <boost/bind.hpp>
+#include "LivecastConnection.hh"
+#include "MonitorConfiguration.hh"
+#include "ResultCallbackIntf.hh"
+#include "StreamInfos.hh"
 
+#include "../lib/Log.hh"
+
+#include <boost/bind.hpp>
 #include <boost/thread.hpp>
 
 using namespace livecast;
@@ -62,9 +67,14 @@ const boost::shared_ptr<StreamInfos> LivecastMonitor::getStreamInfos(unsigned in
   // never reach
 }
 
-const MonitorConfiguration::map_streams_infos_t& LivecastMonitor::getStreams() const
+// const MonitorConfiguration::map_streams_infos_t& LivecastMonitor::getStreams() const
+// {
+//   return this->cfg->getStreamsInfos();
+// }
+
+const boost::shared_ptr<MonitorConfiguration> LivecastMonitor::getConfiguration() const 
 {
-  return this->cfg->getStreamsInfos();
+  return this->cfg; 
 }
 
 boost::asio::io_service& LivecastMonitor::getIOService()
