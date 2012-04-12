@@ -79,10 +79,10 @@ wxString LivecastListCtrlVirtual::OnGetItemText(long item, long column) const
       oss << it->second->getStatus();
       value = oss.str().c_str();
       break;
-    case MODE:     value = it->second->infos[StreamInfos::FIELDS_MODE].c_str(); break;
-    case PROTOCOL: value = it->second->infos[StreamInfos::FIELDS_PROTOCOL].c_str(); break;
-    case SRC_IP:   value = it->second->infos[StreamInfos::FIELDS_SRC_IP].c_str(); break;
-    case BACKLOG:  value = it->second->infos[StreamInfos::FIELDS_BACKLOG].c_str(); break;
+    case MODE:     value = it->second->getInfos()[StreamInfos::FIELDS_MODE].c_str(); break;
+    case PROTOCOL: value = it->second->getInfos()[StreamInfos::FIELDS_PROTOCOL].c_str(); break;
+    case SRC_IP:   value = it->second->getInfos()[StreamInfos::FIELDS_SRC_IP].c_str(); break;
+    case BACKLOG:  value = it->second->getInfos()[StreamInfos::FIELDS_BACKLOG].c_str(); break;
     default:
       LogError::getInstance().sysLog(ERROR, "cannot find column %d", column);
       assert(false);
@@ -232,7 +232,8 @@ void LivecastResult::onStreamListItemActivated(wxListEvent& event)
   MonitorConfiguration::map_streams_infos_t::const_iterator it = cfg->getStreamsInfos().begin();
   std::advance(it, event.GetIndex());
   assert(it != cfg->getStreamsInfos().end());
-  this->infos->setInfos(it->second);
+  boost::shared_ptr<ResultCallbackIntf> cb = this->infos->setInfos(it->second);
+  this->monitor->check(it->second->getId(), cb);
   this->infos->Show(true);
   this->splitter->SplitHorizontally(this->list, this->infos, 0);
 }
@@ -280,7 +281,8 @@ void LivecastResult::onPopupClick(wxCommandEvent& event)
     LogError::getInstance().sysLog(DEBUG, "popup infos %u", streamId);
     MonitorConfiguration::map_streams_infos_t::const_iterator it = cfg->getStreamsInfos().find(streamId);
     assert(it != cfg->getStreamsInfos().end());
-    this->infos->setInfos(it->second);
+    boost::shared_ptr<ResultCallbackIntf> cb = this->infos->setInfos(it->second);
+    this->monitor->check(it->second->getId(), cb);
     this->infos->Show(true);
     this->splitter->SplitHorizontally(this->list, this->infos, 0);
   }
@@ -335,8 +337,8 @@ void LivecastResult::updateItem(MonitorConfiguration::map_streams_infos_t::const
   LogError::getInstance().sysLog(DEBUG, "item %u : %s => %s", n, ossStreamId.str().c_str(), ossStreamStatus.str().c_str());
   this->list->SetItem(n, ID, ossStreamId.str());
   this->list->SetItem(n, STATUS, ossStreamStatus.str());
-  this->list->SetItem(n, MODE, it->second->infos[StreamInfos::FIELDS_MODE]);
-  this->list->SetItem(n, PROTOCOL, it->second->infos[StreamInfos::FIELDS_PROTOCOL]);
-  this->list->SetItem(n, SRC_IP, it->second->infos[StreamInfos::FIELDS_SRC_IP]);
-  this->list->SetItem(n, BACKLOG, it->second->infos[StreamInfos::FIELDS_BACKLOG]);
+  this->list->SetItem(n, MODE, it->second->getInfos()[StreamInfos::FIELDS_MODE]);
+  this->list->SetItem(n, PROTOCOL, it->second->getInfos()[StreamInfos::FIELDS_PROTOCOL]);
+  this->list->SetItem(n, SRC_IP, it->second->getInfos()[StreamInfos::FIELDS_SRC_IP]);
+  this->list->SetItem(n, BACKLOG, it->second->getInfos()[StreamInfos::FIELDS_BACKLOG]);
 }

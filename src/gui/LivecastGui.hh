@@ -16,6 +16,7 @@ class LivecastControl;
 class LivecastResult;
 class LivecastServers;
 class LivecastTaskBarIcon;
+class LivecastPreferences;
 
 class LivecastGui : public wxFrame
 {
@@ -29,22 +30,26 @@ public:
   inline boost::shared_ptr<livecast::monitor::ResultCallbackIntf> getResultCallback() { return this->resultCb; }
 private:
   void onCloseWindow(wxCloseEvent& ev);
-  void onShowServer(wxCommandEvent& ev);
+  void onOpenStreamInformation(wxCommandEvent& ev);
+  void onOpenPreferences(wxCommandEvent& ev);
+  void onClosePreferences(wxCloseEvent& ev);
   void onExit(wxCommandEvent& ev);
+  void onLocal(wxCommandEvent& ev);
+  void onDev(wxCommandEvent& ev);
+  void onHom(wxCommandEvent& ev);
+  void onProd(wxCommandEvent& ev);
   void onTabMiddleUp(wxAuiNotebookEvent& ev);
 
   wxAuiNotebook * noteBook;
   wxPanel * panel;
 
   wxMenuBar *menubar;
-  wxMenu *file;
-  wxMenu *edit;
-  wxMenu *help;
 
   LivecastTaskBarIcon * taskBar;
   LivecastControl * control;
   LivecastResult * streams;
   LivecastServers * servers;
+  LivecastPreferences * preferences;
   boost::shared_ptr<ResultCallback> resultCb;
   boost::shared_ptr<livecast::monitor::LivecastMonitor> monitor;
   boost::shared_ptr<GuiConfiguration> cfg;

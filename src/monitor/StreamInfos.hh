@@ -20,6 +20,7 @@ class StreamInfosException
 class StreamInfos
 {
 public:
+
   enum status_t
   {
     STATUS_WAITING,
@@ -28,6 +29,38 @@ public:
     STATUS_ERROR,
     STATUS_UNKNOWN,
   };
+
+  enum profile_t
+  {
+    PROFILE_ID,
+    PROFILE_WIDTH,
+    PROFILE_HEIGHT,
+    PROFILE_VIDEOBITRATE,
+    PROFILE_AUDIOBITRATE,
+    PROFILE_DEINTERLACE,
+    PROFILE_FRAMERATE,
+    PROFILE_PROTOCOLS,
+    PROFILE_LAST,
+  };
+  typedef boost::array<std::string, PROFILE_LAST> profile_infos_t;
+  typedef std::list<profile_infos_t> profiles_t;
+
+  enum fields_t
+  {
+    FIELDS_ID,
+    FIELDS_SRC_IP,
+    FIELDS_MODE,
+    FIELDS_PROTOCOL,
+    FIELDS_DST_HOST,
+    FIELDS_DST_PORT,
+    FIELDS_EXT_KEY,
+    FIELDS_BACKLOG,
+    FIELDS_NB_CONNECTIONS,
+    FIELDS_ENABLED,
+    FIELDS_DISABLE_FILTER,
+    FIELDS_LAST_FIELD
+  };
+  typedef boost::array<std::string, FIELDS_LAST_FIELD> infos_t;
 
   struct server_t
   {
@@ -56,6 +89,7 @@ public:
       {
       }
   };
+  typedef boost::array<boost::array<std::list<server_t>, 3>, 2> servers_t;
 
 public: 
   StreamInfos(unsigned int streamId);
@@ -69,32 +103,21 @@ public:
   inline unsigned int getId() const { return this->streamId; }
   inline status_t getStatus() const { return this->status; }
   inline const boost::property_tree::ptree& getResultTree() const { return this->resultTree; }
-  inline const boost::array<boost::array<std::list<server_t>, 3>, 2>& getServers() const { return this->servers; }
+  inline const infos_t& getInfos() const { return this->infos; }
+  inline const servers_t& getServers() const { return this->servers; }
+  inline const profiles_t& getProfiles() const { return this->profiles; }
 
   static status_t parseStatus(const std::string& value);
-
-  enum fields_t
-  {
-    FIELDS_ID,
-    FIELDS_SRC_IP,
-    FIELDS_MODE,
-    FIELDS_PROTOCOL,
-    FIELDS_DST_HOST,
-    FIELDS_DST_PORT,
-    FIELDS_EXT_KEY,
-    FIELDS_BACKLOG,
-    FIELDS_NB_CONNECTIONS,
-    FIELDS_ENABLED,
-    FIELDS_DISABLE_FILTER,
-    FIELDS_LAST_FIELD
-  };
-  boost::array<std::string, FIELDS_LAST_FIELD> infos;
 
 private:
   unsigned int streamId;
   status_t status;
   boost::property_tree::ptree resultTree;
-  boost::array<boost::array<std::list<server_t>, 3>, 2> servers;
+  infos_t infos;
+  profiles_t profiles;
+  servers_t servers;
+
+  friend class MonitorConfiguration;
 };
 
 }

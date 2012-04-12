@@ -8,6 +8,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
+#include <boost/property_tree/ini_parser.hpp>
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 
@@ -19,6 +20,8 @@ Configuration::ProgramOption::ProgramOption()
   : confFilename("/usr/local/etc/livecast-monitor.conf"),
     serversConf("/usr/local/etc/livecast-servers.conf"),
     logOutput("stdout"),
+    dbAccessFilename("/usr/local/etc/livecast-access.ini"),
+    defaultAccess("production"),
     hSize(-1),
     vSize(-1),
     connectionTimeout(200),
@@ -61,36 +64,69 @@ Configuration::ProgramOption::parseMainWinSize()
 //
 
 Configuration::Configuration()
+  : accessIndex(0)
 {
 }
 
-void Configuration::load(std::istream&)
+void Configuration::load()
 {
-
-//   try
-//   {
-
-//     boost::property_tree::ptree ptree;
-//     boost::property_tree::read_xml(is, ptree);
-
-//     for (boost::property_tree::ptree::const_iterator it = ptree.get_child("servers").begin(); it != ptree.get_child("servers").end(); ++it)
-//     {
-//       std::string host = it->second.get<std::string>("host");
-//       uint16_t port = it->second.get<int>("port");
-//       std::string user = it->second.get<std::string>("user");
-//       std::string pass = it->second.get<std::string>("pass");
-//       LogError::getInstance().sysLog(DEBUG, "insert connection with values : [ host => '%s' ; port => '%d' ; user => '%s' ; pass => '%s' ] ", host.c_str(), port, user.c_str(), pass.c_str());
-//       LivecastConnectionPtr connection(new LivecastConnection(this->monitor->getIOService(), this->resultCb, host, port, user, pass, this));
-//     }
-//   }
-//   catch (const std::exception& ex)
-//   {
-//     LogError::getInstance().sysLog(ERROR, "cannot parse servers configuration: %s", ex.what());
-//   }
-
   if (this->opts != 0)
   {
     this->MonitorConfiguration::loadStreamList();
+  }
+}
+
+void Configuration::loadAccess(std::istream& is)
+{
+  try
+  {
+
+    boost::property_tree::ptree ptree;
+    boost::property_tree::read_ini(is, ptree);
+
+    access_t index = ACCESS_LOCAL;
+    for (boost::property_tree::ptree::const_iterator it = ptree.get_child("").begin(); it != ptree.get_child("").end(); ++it)
+    {
+      std::string view = it->first;
+      std::string dbHost = it->second.get<std::string>("db-host");
+      std::string dbName = it->second.get<std::string>("db-name");
+      std::string dbUser = it->second.get<std::string>("db-user");
+      std::string dbPass = it->second.get<std::string>("db-pass");
+      if (view == "production")
+      {
+        index = ACCESS_PROD;
+        this->access[ACCESS_PROD] = boost::make_tuple(dbHost, dbName, dbUser, dbPass);
+      }
+      else if (view == "homologation")
+      {
+        index = ACCESS_HOM;
+        this->access[ACCESS_HOM] = boost::make_tuple(dbHost, dbName, dbUser, dbPass);
+      }
+      else if (view == "developpement")
+      {
+        index = ACCESS_DEV;
+        this->access[ACCESS_DEV] = boost::make_tuple(dbHost, dbName, dbUser, dbPass);
+      }
+      else if (view == "local")
+      {
+        index = ACCESS_LOCAL;
+        this->access[ACCESS_LOCAL] = boost::make_tuple(dbHost, dbName, dbUser, dbPass);
+      }
+      else 
+      {
+        continue;
+      }
+      if (view == this->opts->defaultAccess)
+      {
+        this->accessIndex = index;
+      }
+      LogError::getInstance().sysLog(DEBUG, "insert database connection for %s with values : [ host => '%s' ; name => '%d' ; user => '%s' ; pass => '%s' ] ", 
+                                     view.c_str(), dbHost.c_str(), dbName.c_str(), dbUser.c_str(), dbPass.c_str());
+    }
+  }
+  catch (const std::exception& ex)
+  {
+    LogError::getInstance().sysLog(ERROR, "cannot parse access configuration: %s", ex.what());
   }
 }
 
@@ -117,6 +153,8 @@ void Configuration::parseOpts(int argc, char**argv)
       ("db-pass", po::value<std::string>(&this->opts->dbPass)->default_value(this->opts->dbPass), "set pass database")
       ("db-host", po::value<std::string>(&this->opts->dbHost)->default_value(this->opts->dbHost), "set host database")
       ("db-name", po::value<std::string>(&this->opts->dbName)->default_value(this->opts->dbName), "set name database")
+      ("db-access-file", po::value<std::string>(&this->opts->dbAccessFilename)->default_value(this->opts->dbAccessFilename), "set access filename")
+      ("default-access", po::value<std::string>(&this->opts->defaultAccess)->default_value(this->opts->defaultAccess), "default access (<production>/<homologation>/<developpement>/<local>)")
       ("db-query-stream", po::value<std::string>(&this->opts->dbQueryStream)->default_value(this->opts->dbQueryStream), "set database query to load stream informations")
       ("db-query-stream-list", po::value<std::string>(&this->opts->dbQueryStreamList)->default_value(this->opts->dbQueryStreamList), "set database query to load stream list informations")
       ("db-query-stream-profile", po::value<std::string>(&this->opts->dbQueryStreamProfile)->default_value(this->opts->dbQueryStreamProfile), "set database query to load stream profiles informations")
@@ -127,7 +165,10 @@ void Configuration::parseOpts(int argc, char**argv)
       ("use-virtual-list", po::bool_switch(&this->opts->useVirtualList), "use a wx widget virtual list to display streams list (see wxWidgets Documentation for further informations)")
       ;
 
-    po::store(po::parse_command_line(argc, argv, desc), input_arg);
+    po::positional_options_description p;
+    p.add("conf", -1);
+
+    po::store(po::command_line_parser(argc, argv).options(desc).positional(p).run(), input_arg);
     po::notify(input_arg);
 
     std::ifstream f(this->opts->confFilename.c_str());

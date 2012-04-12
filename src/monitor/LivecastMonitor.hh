@@ -25,7 +25,6 @@ public:
   void refresh(boost::shared_ptr<ResultCallbackIntf> resultCb);
   void check(unsigned int streamId, boost::shared_ptr<ResultCallbackIntf> resultCb);
   const boost::shared_ptr<StreamInfos> getStreamInfos(unsigned int streamId);
-  // const MonitorConfiguration::map_streams_infos_t& getStreams() const;
   const boost::shared_ptr<MonitorConfiguration> getConfiguration() const;
 
 protected:

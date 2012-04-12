@@ -13,13 +13,19 @@ namespace gui {
 class LivecastListCtrl : public wxListView
 {
 public:
-  LivecastListCtrl(wxWindow * parent);
+  LivecastListCtrl(wxWindow * parent, bool sortable = false);
 
   void SetItemTextColour(long item, livecast::monitor::StreamInfos::status_t status);
+
+  long sortCol;
 
 protected:
   LivecastListCtrl(wxWindow * parent, wxWindowID id, const wxPoint &pos, const wxSize &size, long style);
   void onPaint(wxPaintEvent& ev);
+  void onSort(wxListEvent& ev);
+
+private:
+  const bool sortable;
 };
 
 }

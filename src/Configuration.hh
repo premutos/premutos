@@ -4,6 +4,8 @@
 #include "gui/GuiConfiguration.hh"
 #include "monitor/MonitorConfiguration.hh"
 #include <sstream>
+#include <boost/array.hpp>
+#include <boost/tuple/tuple.hpp>
 
 namespace livecast {
 
@@ -15,6 +17,15 @@ class Configuration : public monitor::MonitorConfiguration,
                       public gui::GuiConfiguration
 {
 public:
+
+  enum access_t
+  {
+    ACCESS_LOCAL,
+    ACCESS_DEV,
+    ACCESS_HOM,
+    ACCESS_PROD,
+    ACCESS_LAST,
+  };
 
   class BadProgramOptions
   {
@@ -32,6 +43,8 @@ public:
     std::string dbPass;
     std::string dbHost;
     std::string dbName;
+    std::string dbAccessFilename;
+    std::string defaultAccess;
     std::string dbQueryStream;
     std::string dbQueryStreamList;
     std::string dbQueryStreamProfile;
@@ -52,16 +65,18 @@ public:
 public:
   Configuration();
   void parseOpts(int argc, char**argv);
-  void load(std::istream& is);
+  void load();
+  void loadAccess(std::istream& is);
 
   inline void setMonitor(boost::shared_ptr<monitor::LivecastMonitor> monitor) { this->monitor = monitor; }
   inline const boost::shared_ptr<ProgramOption> getOpts() const { return this->opts; }
 
   // Monitor configuration interface
-  virtual const char * getDbUser() const { return this->opts->dbUser.c_str(); }
-  virtual const char * getDbPass() const { return this->opts->dbPass.c_str(); }
-  virtual const char * getDbHost() const { return this->opts->dbHost.c_str(); }
-  virtual const char * getDbName() const { return this->opts->dbName.c_str(); }
+  void setAccess(unsigned int i) { if (i < this->access.size()) { this->accessIndex = i; } }
+  const char * getDbUser() const { return this->access[this->accessIndex].get<2>().c_str(); }
+  const char * getDbPass() const { return this->access[this->accessIndex].get<3>().c_str(); }
+  const char * getDbHost() const { return this->access[this->accessIndex].get<0>().c_str(); }
+  const char * getDbName() const { return this->access[this->accessIndex].get<1>().c_str(); }
   inline const char * getQueryStream() const { return this->opts->dbQueryStream.c_str(); }
   inline const char * getQueryStreamList() const { return this->opts->dbQueryStreamList.c_str(); }
   inline const char * getQueryStreamProfile() const { return this->opts->dbQueryStreamProfile.c_str(); }
@@ -79,6 +94,8 @@ protected:
 private:
   boost::shared_ptr<monitor::LivecastMonitor> monitor;  
   boost::shared_ptr<ProgramOption> opts;
+  boost::array<boost::tuple<std::string, std::string, std::string, std::string>, ACCESS_LAST> access;
+  unsigned int accessIndex;
 };
 
 }

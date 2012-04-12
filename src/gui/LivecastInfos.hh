@@ -5,19 +5,21 @@
 #include <wx/aui/auibook.h>
 #include <wx/listctrl.h>
 
+#include "../monitor/ResultCallbackIntf.hh"
 #include "../monitor/StreamInfos.hh"
 
 namespace livecast {
 namespace gui {
 
 class LivecastListCtrl;
+class LivecastStatus;
 
 class LivecastInfos : public wxPanel
 {
 public:
   LivecastInfos(wxWindow* parent);
 
-  void setInfos(const boost::shared_ptr<livecast::monitor::StreamInfos> infos);
+  boost::shared_ptr<monitor::ResultCallbackIntf> setInfos(const boost::shared_ptr<livecast::monitor::StreamInfos> infos);
 
 protected:
   void onTabMiddleUp(wxAuiNotebookEvent& event);
@@ -25,7 +27,9 @@ protected:
 private:
   wxAuiNotebook * noteBook;
   wxPanel * infos;
+  LivecastListCtrl * profiles;
   LivecastListCtrl * servers;
+  LivecastStatus * statusSchema;
 
   wxStaticText * idValue;
   wxStaticText * modeValue;

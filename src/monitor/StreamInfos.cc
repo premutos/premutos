@@ -117,6 +117,7 @@ void StreamInfos::check(boost::shared_ptr<ResultCallbackIntf> resultCb,
 
 void StreamInfos::loadInfos(const boost::shared_ptr<MonitorConfiguration> cfg)
 {
+  this->profiles.clear();
   cfg->load(*this);
 }
 

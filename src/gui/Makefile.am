@@ -11,6 +11,7 @@ liblivecast_admin_gui_la_SOURCES = \
 	LivecastGui.cc \
 	LivecastInfos.cc \
 	LivecastListCtrl.cc \
+	LivecastPreferences.cc \
 	LivecastResult.cc \
 	LivecastServers.cc \
 	LivecastStatus.cc \

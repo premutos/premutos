@@ -74,11 +74,18 @@ void LivecastServers::refresh()
     item.SetId(index);
     this->servers->InsertItem(item);
 
+    std::string ip = "n/a";
+    struct hostent * entry = ::gethostbyname(it->first.first.c_str());
+    if (entry != 0)
+    {
+      ip = ::inet_ntoa(*((in_addr*)entry->h_addr));
+    }
+
     std::ostringstream portSS;
     portSS << it->first.second;
     this->servers->SetItem(index, 0, monitor->getConfiguration()->getServerFromPort(it->first.second).c_str());
-    this->servers->SetItem(index, 1, it->first.first.c_str());
-    this->servers->SetItem(index, 2, "n/a");
+    this->servers->SetItem(index, 1, it->first.first.c_str());    
+    this->servers->SetItem(index, 2, ip);
     this->servers->SetItem(index, 3, portSS.str().c_str());
 
     this->servers->SetItemBackgroundColour(index, wxColour(wxColour(((index % 2) == 0) ? lightYellow : lightBlue)));
@@ -175,11 +182,18 @@ void LivecastServers::onResultsListDblClicked(wxListEvent& event)
     title << "status details " << streamId;
     this->results->InsertPage(this->results->GetPageCount(), list, title.str(), true);
   }
-  catch (boost::bad_lexical_cast& ex)
+  catch (const boost::bad_lexical_cast& ex)
   {
     LogError::getInstance().sysLog(ERROR, "bad stream id: %s", ex.what());
   }
-
+  catch (const std::exception& ex)
+  {
+    LogError::getInstance().sysLog(ERROR, "bad stream id: %s", ex.what());
+  }
+  catch (...)
+  {
+    LogError::getInstance().sysLog(ERROR, "unkwnow error");
+  }
 }
 
 void LivecastServers::fillList(LivecastListCtrl * list, boost::property_tree::ptree& result) const
@@ -196,8 +210,8 @@ void LivecastServers::fillList(LivecastListCtrl * list, boost::property_tree::pt
     unsigned int index = 0;
     for (tokenizer::iterator it = tok.begin(); it != tok.end(); ++it)
     {
-      std::string streamId;
-      std::string statusStr;
+      std::string streamId = (*it);
+      std::string statusStr = (*it);
       const std::string::size_type pos = (*it).find(" ");
       if (pos != std::string::npos)
       {
@@ -205,9 +219,19 @@ void LivecastServers::fillList(LivecastListCtrl * list, boost::property_tree::pt
         statusStr = (*it).substr(pos + 1);
       }
       
+      unsigned int id = 0;
+      try 
+      {
+        id = boost::lexical_cast<unsigned int>(streamId.c_str());
+      }
+      catch (const boost::bad_lexical_cast& ex)
+      {
+        streamId = "n/a";
+      }
+      
       wxListItem item;
       item.SetId(index);
-      item.SetData(boost::lexical_cast<long>(streamId.c_str()));
+      item.SetData(id);
       list->InsertItem(item);
 
       list->SetItem(index, 0, this->host.c_str());

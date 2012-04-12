@@ -7,10 +7,10 @@ using namespace livecast::gui;
 StatusSchema::StatusSchema(wxWindow * parent)
   : wxControl(parent, wxID_ANY),
     resolution(1280, 1024),
-    rectDefSize(resolution.GetWidth() * 0.1, resolution.GetHeight() * 0.1),
+    rectDefSize(resolution.GetWidth() * 0.12, resolution.GetHeight() * 0.2),
     margin(resolution.GetWidth() * 0.02),
     edgeSize(resolution.GetWidth() * 0.007),
-    fontSize(resolution.GetHeight() * 0.012)
+    fontSize(resolution.GetHeight() * 0.03)
 {
   this->Bind(wxEVT_PAINT, &StatusSchema::refresh, this, wxID_ANY);
   this->Bind(wxEVT_RIGHT_DOWN, &StatusSchema::onOpenPopupMenu, this, wxID_ANY);

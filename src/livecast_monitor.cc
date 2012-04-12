@@ -54,10 +54,12 @@ bool Livecast::OnInit()
   this->gui.reset(new gui::LivecastGui(cfg, monitor));
   this->cfg->setMonitor(this->monitor);
 
-  LogError::getInstance().sysLog(DEBUG, "%s", this->cfg->getOpts()->serversConf.c_str());
-  std::ifstream f(this->cfg->getOpts()->serversConf.c_str());
-  cfg->load(f);
+  LogError::getInstance().sysLog(DEBUG, "%s", this->cfg->getOpts()->dbAccessFilename.c_str());
+  std::ifstream f(this->cfg->getOpts()->dbAccessFilename.c_str());
+  cfg->loadAccess(f);
   f.close();
+
+  cfg->load();
 
   boost::thread threadMonitor = boost::thread(boost::bind(&monitor::LivecastMonitor::run, monitor));
   gui->Show(true);

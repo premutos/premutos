@@ -26,6 +26,7 @@ public:
   virtual unsigned int getConnectionTimeout() const = 0;
 
   // db
+  virtual void setAccess(unsigned int i) = 0;
   virtual const char * getDbUser() const = 0;
   virtual const char * getDbPass() const = 0;
   virtual const char * getDbHost() const = 0;
@@ -41,6 +42,7 @@ public:
   inline const connections_t& getConnections() const { return this->connections; }
   boost::shared_ptr<LivecastConnection> getConnection(const std::string& host, uint16_t port);
 
+  virtual void load() = 0;
   int load(StreamInfos& streamInfos) const;
   std::string getPipeline(unsigned int streamId) const;
   

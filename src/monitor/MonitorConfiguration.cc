@@ -73,15 +73,7 @@ int MonitorConfiguration::load(StreamInfos& streamInfos) const
   const char * dbUser = this->getDbUser();
   const char * dbPass = this->getDbPass();
   const char * dbName = this->getDbName();
-  std::string query = this->getQueryStream();
-
-  std::string::size_type pos = query.find("<streamId>");
-  if (pos != std::string::npos)
-  {
-    std::ostringstream oss;
-    oss << streamInfos.getId();
-    query.replace(pos, 10, oss.str());
-  }
+  std::string query = "";
 
   MYSQL connection;
   MYSQL_RES *result;
@@ -94,6 +86,18 @@ int MonitorConfiguration::load(StreamInfos& streamInfos) const
     LogError::getInstance().sysLog(ERROR, "connection to database failed: %s\n", mysql_error(&connection));
 		return EINVAL;
 	}
+
+  //
+  // load stream infos
+  query = this->getQueryStream();
+
+  std::string::size_type pos = query.find("<streamId>");
+  if (pos != std::string::npos)
+  {
+    std::ostringstream oss;
+    oss << streamInfos.getId();
+    query.replace(pos, 10, oss.str());
+  }
 
   rc = mysql_query(&connection, query.c_str());
   if (rc < 0)
@@ -124,17 +128,60 @@ int MonitorConfiguration::load(StreamInfos& streamInfos) const
 
     if (row != 0)
     {
-      streamInfos.infos[StreamInfos::FIELDS_ID] =             row[StreamInfos::FIELDS_ID];
-      streamInfos.infos[StreamInfos::FIELDS_SRC_IP] =         row[StreamInfos::FIELDS_SRC_IP];
-      streamInfos.infos[StreamInfos::FIELDS_MODE] =           row[StreamInfos::FIELDS_MODE];
-      streamInfos.infos[StreamInfos::FIELDS_PROTOCOL] =       row[StreamInfos::FIELDS_PROTOCOL];
-      streamInfos.infos[StreamInfos::FIELDS_DST_HOST] =       row[StreamInfos::FIELDS_DST_HOST];
-      streamInfos.infos[StreamInfos::FIELDS_DST_PORT] =       row[StreamInfos::FIELDS_DST_PORT];
-      streamInfos.infos[StreamInfos::FIELDS_EXT_KEY] =        row[StreamInfos::FIELDS_EXT_KEY];
-      streamInfos.infos[StreamInfos::FIELDS_BACKLOG] =        row[StreamInfos::FIELDS_BACKLOG];
-      streamInfos.infos[StreamInfos::FIELDS_NB_CONNECTIONS] = row[StreamInfos::FIELDS_NB_CONNECTIONS];
-      streamInfos.infos[StreamInfos::FIELDS_ENABLED] =        row[StreamInfos::FIELDS_ENABLED];
-      streamInfos.infos[StreamInfos::FIELDS_DISABLE_FILTER] = row[StreamInfos::FIELDS_DISABLE_FILTER];
+      for (unsigned int i = 0; i < StreamInfos::FIELDS_LAST_FIELD; i++)
+      {
+        streamInfos.infos[i] = row[i];
+      }
+    }
+
+  } while (row != 0);
+
+  //
+  // load profiles
+  query = this->getQueryStreamProfile();
+
+  pos = query.find("<streamId>");
+  if (pos != std::string::npos)
+  {
+    std::ostringstream oss;
+    oss << streamInfos.getId();
+    query.replace(pos, 10, oss.str());
+  }
+
+  rc = mysql_query(&connection, query.c_str());
+  if (rc < 0)
+  {
+    LogError::getInstance().sysLog(ERROR, "query failed: %s\n", mysql_error(&connection));
+		return rc;
+  }
+
+  if (!mysql_field_count(&connection))
+  {
+    LogError::getInstance().sysLog(DEBUG, "no result from query: %s\n", query.c_str());
+    return EINVAL;
+  }
+
+  LogError::getInstance().sysLog(DEBUG, "query: '%s'\n", query.c_str());
+
+  result = mysql_use_result(&connection);
+  if (!result) 
+  {
+    LogError::getInstance().sysLog(ERROR, "cannot use result on the mysql connection: (%d) %s\n", mysql_errno(&connection), mysql_error(&connection));
+    return EINVAL;
+  }
+  
+  do
+  {
+    row = mysql_fetch_row(result);
+
+    if (row != 0)
+    {
+      StreamInfos::profile_infos_t pi;
+      for (unsigned int i = 0; i < StreamInfos::PROFILE_LAST; i++)
+      {
+        pi[i] = row[i];
+      }
+      streamInfos.profiles.push_back(pi);
     }
 
   } while (row != 0);
@@ -213,6 +260,9 @@ std::string MonitorConfiguration::getPipeline(unsigned int streamId) const
 
 int MonitorConfiguration::loadStreamList()
 {
+  this->streamsInfos.clear();
+  this->connections.clear();
+
   const char * dbHost = this->getDbHost();
   const char * dbUser = this->getDbUser();
   const char * dbPass = this->getDbPass();
