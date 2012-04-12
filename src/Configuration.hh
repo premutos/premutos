@@ -18,15 +18,6 @@ class Configuration : public monitor::MonitorConfiguration,
 {
 public:
 
-  enum access_t
-  {
-    ACCESS_LOCAL,
-    ACCESS_DEV,
-    ACCESS_HOM,
-    ACCESS_PROD,
-    ACCESS_LAST,
-  };
-
   class BadProgramOptions
   {
   };
@@ -44,12 +35,13 @@ public:
     std::string dbHost;
     std::string dbName;
     std::string dbAccessFilename;
-    std::string defaultAccess;
+    std::string accessKey;
     std::string dbQueryStream;
     std::string dbQueryStreamList;
     std::string dbQueryStreamProfile;
     int hSize;
     int vSize;
+    unsigned int refreshPeriod;
     unsigned int connectionTimeout;
     unsigned int logLevel;
     bool logColor;
@@ -62,6 +54,8 @@ public:
     int parseMainWinSize();
   };
 
+  typedef std::map<std::string, boost::tuple<std::string, std::string, std::string, std::string> > access_t;
+
 public:
   Configuration();
   void parseOpts(int argc, char**argv);
@@ -72,11 +66,25 @@ public:
   inline const boost::shared_ptr<ProgramOption> getOpts() const { return this->opts; }
 
   // Monitor configuration interface
-  void setAccess(unsigned int i) { if (i < this->access.size()) { this->accessIndex = i; } }
-  const char * getDbUser() const { return this->access[this->accessIndex].get<2>().c_str(); }
-  const char * getDbPass() const { return this->access[this->accessIndex].get<3>().c_str(); }
-  const char * getDbHost() const { return this->access[this->accessIndex].get<0>().c_str(); }
-  const char * getDbName() const { return this->access[this->accessIndex].get<1>().c_str(); }
+  void setAccessKey(const char * key) { this->accessKey = key; }
+
+  const char * getDbUser() const { 
+    access_t::const_iterator it = this->access.find(this->accessKey);
+    return it->second.get<2>().c_str(); 
+  }
+  const char * getDbPass() const { 
+    access_t::const_iterator it = this->access.find(this->accessKey);
+    return it->second.get<3>().c_str(); 
+  }
+  const char * getDbHost() const { 
+    access_t::const_iterator it = this->access.find(this->accessKey);
+    return it->second.get<0>().c_str(); 
+  }
+  const char * getDbName() const { 
+    access_t::const_iterator it = this->access.find(this->accessKey);
+    return it->second.get<1>().c_str(); 
+  }
+
   inline const char * getQueryStream() const { return this->opts->dbQueryStream.c_str(); }
   inline const char * getQueryStreamList() const { return this->opts->dbQueryStreamList.c_str(); }
   inline const char * getQueryStreamProfile() const { return this->opts->dbQueryStreamProfile.c_str(); }
@@ -87,6 +95,7 @@ public:
   inline int getMainWinHSize() const { return this->opts->hSize; }
   inline int getMainWinVSize() const { return this->opts->vSize; }
   inline bool useVirtualStreamList() const { return this->opts->useVirtualList; }
+  const std::list<std::string> getViews() const;
 
 protected:
   boost::shared_ptr<monitor::LivecastConnection> createConnection(const std::string& host, uint16_t port) const;
@@ -94,8 +103,8 @@ protected:
 private:
   boost::shared_ptr<monitor::LivecastMonitor> monitor;  
   boost::shared_ptr<ProgramOption> opts;
-  boost::array<boost::tuple<std::string, std::string, std::string, std::string>, ACCESS_LAST> access;
-  unsigned int accessIndex;
+  access_t access;
+  std::string accessKey;
 };
 
 }

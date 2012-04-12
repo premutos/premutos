@@ -9,7 +9,8 @@ using namespace gui;
 using namespace monitor;
 
 LivecastInfos::LivecastInfos(wxWindow * parent)
-  : wxPanel(parent, wxID_ANY)
+  : wxPanel(parent, wxID_ANY),
+    currentSelectionPage(0)
 {
 
   // prepare infos
@@ -144,8 +145,11 @@ LivecastInfos::LivecastInfos(wxWindow * parent)
   this->SetSizer(box);
 }
 
-boost::shared_ptr<ResultCallbackIntf> LivecastInfos::setInfos(const boost::shared_ptr<livecast::monitor::StreamInfos> streamInfos)
+boost::shared_ptr<ResultCallbackIntf> LivecastInfos::setInfos(boost::shared_ptr<const livecast::monitor::StreamInfos> streamInfos)
 {
+
+  this->currentSelectionPage = this->noteBook->GetSelection();
+  this->streamInfos = streamInfos;
 
   // infos
   this->idValue->SetLabel(streamInfos->getInfos()[StreamInfos::FIELDS_ID].c_str());
@@ -218,18 +222,26 @@ boost::shared_ptr<ResultCallbackIntf> LivecastInfos::setInfos(const boost::share
   }
 
   // status schema
-  this->statusSchema = new LivecastStatus(this->noteBook, streamInfos, true);
   for (size_t i = 2; i < this->noteBook->GetPageCount(); i++)
   {
     this->noteBook->RemovePage(i);
   }
+  this->statusSchema = new LivecastStatus(this->noteBook, streamInfos, true);
   this->noteBook->InsertPage(3, this->statusSchema, "status schema", true);
 
   // set selection on servers list
-  this->noteBook->SetSelection(1);
+  this->noteBook->SetSelection((this->currentSelectionPage < this->noteBook->GetPageCount()) ? this->currentSelectionPage : 0);
 
   boost::shared_ptr<LivecastStatusCallback> cb(new LivecastStatusCallback(this->statusSchema));
   return cb;
+}
+
+void LivecastInfos::refresh()
+{
+  if (this->streamInfos && this->streamInfos->isModified())
+  {
+    this->setInfos(this->streamInfos);
+  }
 }
 
 void LivecastInfos::onTabMiddleUp(wxAuiNotebookEvent& event)

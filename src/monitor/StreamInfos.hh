@@ -96,6 +96,7 @@ public:
   ~StreamInfos();
   
   void check(boost::shared_ptr<ResultCallbackIntf> resultCb, const boost::shared_ptr<MonitorConfiguration> cfg);
+  void reinit(const boost::shared_ptr<MonitorConfiguration> cfg);
   void loadInfos(const boost::shared_ptr<MonitorConfiguration> cfg);
   void parseStatus();
   void addServer(const server_t& server, bool primary);
@@ -106,6 +107,7 @@ public:
   inline const infos_t& getInfos() const { return this->infos; }
   inline const servers_t& getServers() const { return this->servers; }
   inline const profiles_t& getProfiles() const { return this->profiles; }
+  inline bool isModified() const { return this->modified; }
 
   static status_t parseStatus(const std::string& value);
 
@@ -116,6 +118,7 @@ private:
   infos_t infos;
   profiles_t profiles;
   servers_t servers;
+  bool modified;
 
   friend class MonitorConfiguration;
 };

@@ -21,9 +21,10 @@ Configuration::ProgramOption::ProgramOption()
     serversConf("/usr/local/etc/livecast-servers.conf"),
     logOutput("stdout"),
     dbAccessFilename("/usr/local/etc/livecast-access.ini"),
-    defaultAccess("production"),
+    accessKey(""),
     hSize(-1),
     vSize(-1),
+    refreshPeriod(1000),
     connectionTimeout(200),
     logLevel(5),
     logColor(false),
@@ -64,7 +65,7 @@ Configuration::ProgramOption::parseMainWinSize()
 //
 
 Configuration::Configuration()
-  : accessIndex(0)
+  : accessKey("")
 {
 }
 
@@ -84,7 +85,6 @@ void Configuration::loadAccess(std::istream& is)
     boost::property_tree::ptree ptree;
     boost::property_tree::read_ini(is, ptree);
 
-    access_t index = ACCESS_LOCAL;
     for (boost::property_tree::ptree::const_iterator it = ptree.get_child("").begin(); it != ptree.get_child("").end(); ++it)
     {
       std::string view = it->first;
@@ -92,34 +92,13 @@ void Configuration::loadAccess(std::istream& is)
       std::string dbName = it->second.get<std::string>("db-name");
       std::string dbUser = it->second.get<std::string>("db-user");
       std::string dbPass = it->second.get<std::string>("db-pass");
-      if (view == "production")
+
+      this->access.insert(std::make_pair(view, boost::make_tuple(dbHost, dbName, dbUser, dbPass)));
+      if (view == this->opts->accessKey)
       {
-        index = ACCESS_PROD;
-        this->access[ACCESS_PROD] = boost::make_tuple(dbHost, dbName, dbUser, dbPass);
+        this->accessKey = view;
       }
-      else if (view == "homologation")
-      {
-        index = ACCESS_HOM;
-        this->access[ACCESS_HOM] = boost::make_tuple(dbHost, dbName, dbUser, dbPass);
-      }
-      else if (view == "developpement")
-      {
-        index = ACCESS_DEV;
-        this->access[ACCESS_DEV] = boost::make_tuple(dbHost, dbName, dbUser, dbPass);
-      }
-      else if (view == "local")
-      {
-        index = ACCESS_LOCAL;
-        this->access[ACCESS_LOCAL] = boost::make_tuple(dbHost, dbName, dbUser, dbPass);
-      }
-      else 
-      {
-        continue;
-      }
-      if (view == this->opts->defaultAccess)
-      {
-        this->accessIndex = index;
-      }
+
       LogError::getInstance().sysLog(DEBUG, "insert database connection for %s with values : [ host => '%s' ; name => '%d' ; user => '%s' ; pass => '%s' ] ", 
                                      view.c_str(), dbHost.c_str(), dbName.c_str(), dbUser.c_str(), dbPass.c_str());
     }
@@ -154,12 +133,13 @@ void Configuration::parseOpts(int argc, char**argv)
       ("db-host", po::value<std::string>(&this->opts->dbHost)->default_value(this->opts->dbHost), "set host database")
       ("db-name", po::value<std::string>(&this->opts->dbName)->default_value(this->opts->dbName), "set name database")
       ("db-access-file", po::value<std::string>(&this->opts->dbAccessFilename)->default_value(this->opts->dbAccessFilename), "set access filename")
-      ("default-access", po::value<std::string>(&this->opts->defaultAccess)->default_value(this->opts->defaultAccess), "default access (<production>/<homologation>/<developpement>/<local>)")
+      ("access-key", po::value<std::string>(&this->opts->accessKey)->default_value(this->opts->accessKey), "default access key to link database")
       ("db-query-stream", po::value<std::string>(&this->opts->dbQueryStream)->default_value(this->opts->dbQueryStream), "set database query to load stream informations")
       ("db-query-stream-list", po::value<std::string>(&this->opts->dbQueryStreamList)->default_value(this->opts->dbQueryStreamList), "set database query to load stream list informations")
       ("db-query-stream-profile", po::value<std::string>(&this->opts->dbQueryStreamProfile)->default_value(this->opts->dbQueryStreamProfile), "set database query to load stream profiles informations")
       ("main-win-name", po::value<std::string>(&this->opts->mainWinName)->default_value(argv[0]), "set main window name")
       ("main-win-size", po::value<std::string>(&this->opts->mainWinSize), "set main window size")
+      ("refresh-period", po::value<unsigned int>(&this->opts->refreshPeriod)->default_value(this->opts->refreshPeriod), "set the refresh period in milliseconds")
       ("connection-timeout", po::value<unsigned int>(&this->opts->connectionTimeout)->default_value(this->opts->connectionTimeout), "server connection timeout in milliseconds")
       ("check-on-init", po::bool_switch(&this->opts->checkOnInit), "perform server check on initialisation")
       ("use-virtual-list", po::bool_switch(&this->opts->useVirtualList), "use a wx widget virtual list to display streams list (see wxWidgets Documentation for further informations)")
@@ -223,4 +203,14 @@ boost::shared_ptr<monitor::LivecastConnection> Configuration::createConnection(c
 {
   boost::shared_ptr<monitor::LivecastConnection> connection(new monitor::LivecastConnection(this->monitor->getIOService(), host, port, "tma", "k67bgt3b", this));
   return connection;
+}
+
+const std::list<std::string> Configuration::getViews() const
+{
+  std::list<std::string> l;
+  for (access_t::const_iterator it = this->access.begin(); it != this->access.end(); ++it)
+  {
+    l.push_back(it->first);
+  }
+  return l;
 }

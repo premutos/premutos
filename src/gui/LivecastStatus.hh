@@ -15,7 +15,7 @@ class StatusSchema;
 class LivecastStatus : public wxPanel
 {
 public:
-  LivecastStatus(wxWindow * parent, boost::shared_ptr<livecast::monitor::StreamInfos> streamInfos, bool noTree = false);
+  LivecastStatus(wxWindow * parent, boost::shared_ptr<const livecast::monitor::StreamInfos> streamInfos, bool noTree = false);
   ~LivecastStatus();
   
   void commitCheckStream(unsigned int streamId);
@@ -29,7 +29,7 @@ private:
 
   const wxEventType checkStreamEvent;  
   unsigned int streamId;
-  boost::shared_ptr<livecast::monitor::StreamInfos> streamInfos;
+  boost::shared_ptr<const livecast::monitor::StreamInfos> streamInfos;
   const bool noTree;
 };
 

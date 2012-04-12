@@ -203,6 +203,7 @@ void LivecastResult::onStreamListUpdate(wxCommandEvent& WXUNUSED(event))
       this->updateItem(it);
     }
   }
+  this->infos->refresh();
 }
 
 void LivecastResult::onStreamListDblClicked(wxListEvent& event)
@@ -309,7 +310,8 @@ void LivecastResult::onPopupClick(wxCommandEvent& event)
     wxDialog * dlg = new wxMessageDialog(this, title.str(), title.str(), wxOK | wxCANCEL | wxCENTRE);
     if (dlg->ShowModal() == wxID_OK)
     {
-      LogError::getInstance().sysLog(ERROR, "reinit %u", streamId);
+      LogError::getInstance().sysLog(DEBUG, "reinit %u", streamId);
+      this->monitor->reinitStream(streamId);
     }
     else
     {

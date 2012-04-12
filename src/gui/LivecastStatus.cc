@@ -11,7 +11,7 @@ using namespace livecast;
 using namespace livecast::monitor;
 using namespace livecast::gui;
 
-LivecastStatus::LivecastStatus(wxWindow * parent, boost::shared_ptr<StreamInfos> streamInfos, bool noTree)
+LivecastStatus::LivecastStatus(wxWindow * parent, boost::shared_ptr<const StreamInfos> streamInfos, bool noTree)
   : wxPanel(parent, wxID_ANY),
     checkStreamEvent(wxNewEventType()),
     streamId(streamInfos->getId()),

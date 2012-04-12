@@ -41,6 +41,35 @@ void LivecastConnection::check(unsigned int streamId, boost::shared_ptr<boost::p
   this->streamId = streamId;
   this->result = result;
   this->details = details;
+  this->op = STATUS;
+
+  this->perform();
+
+  // wait for result
+  while(!this->data_ready)
+  {
+    this->cond.wait(lockSync);
+  }
+}
+
+void LivecastConnection::reinit(unsigned int streamId)
+{
+  boost::unique_lock<boost::mutex> lockCheck(this->checkMut);
+  boost::unique_lock<boost::mutex> lockSync(this->syncMut);
+  this->streamId = streamId;
+  this->op = REINIT;
+
+  this->perform();
+
+  // wait for result
+  while(!this->data_ready)
+  {
+    this->cond.wait(lockSync);
+  }
+}
+
+void LivecastConnection::perform()
+{
   try
   {
     std::ostringstream os;
@@ -50,7 +79,7 @@ void LivecastConnection::check(unsigned int streamId, boost::shared_ptr<boost::p
     if (iterator != boost::asio::ip::tcp::resolver::iterator())
     {
       this->data_ready = false;      
-      LogError::getInstance().sysLog(DEBUG, "start check stream id %d on %s:%d", streamId, this->host.c_str(), this->port);
+      LogError::getInstance().sysLog(DEBUG, "start operation on stream id %d on %s:%d", streamId, this->host.c_str(), this->port);
       this->socket.async_connect(iterator->endpoint(), this->strand.wrap(boost::bind(&LivecastConnection::handleConnect, shared_from_this(), boost::asio::placeholders::error)));
       this->deadline_timer.expires_from_now(boost::posix_time::milliseconds(this->conf->getConnectionTimeout()));
       this->deadline_timer.async_wait(this->strand.wrap(boost::bind(&LivecastConnection::handleTimeout, shared_from_this(), boost::asio::placeholders::error)));
@@ -70,12 +99,6 @@ void LivecastConnection::check(unsigned int streamId, boost::shared_ptr<boost::p
     this->parseResult(oss.str().c_str());
     LogError::getInstance().sysLog(WARNING, "%s", oss.str().c_str());
   } 
-
-  // wait for result
-  while(!this->data_ready)
-  {
-    this->cond.wait(lockSync);
-  }
 }
   
 void LivecastConnection::handleConnect(const boost::system::error_code& err)
@@ -121,26 +144,29 @@ void LivecastConnection::handleConnect(const boost::system::error_code& err)
     buf[len] = 0;
     LogError::getInstance().sysLog(DEBUG, buf.data());
 
-    // ask for status
+    // perform operation    
     std::ostringstream oss;
-    if (this->details)
+    switch (this->op)
     {
-      oss << "status_detail " << this->streamId << "\r\n";
-    }
-    else
-    {
+    case STATUS:
       oss << "status " << this->streamId << "\r\n";
+      break;
+    case STATUS_DETAIL:
+      oss << "status_detail " << this->streamId << "\r\n";
+      break;
+    case REINIT:
+      oss << "reinit " << this->streamId << "\r\n";
     }
     boost::asio::write(socket, boost::asio::buffer(oss.str()), boost::asio::transfer_all(), error);
     this->checkError(error);
 
-    // get status and print it
+    // get response
     len = socket.read_some(boost::asio::buffer(buf), error);
     this->checkError(error);
     buf[len] = 0;
     LogError::getInstance().sysLog(DEBUG, buf.data());
  
-    // todo : parse status 
+    // todo : parse response
     this->resultString = buf.data();
     this->parseResult(buf.data());
 

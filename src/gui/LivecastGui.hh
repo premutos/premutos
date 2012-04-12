@@ -34,16 +34,15 @@ private:
   void onOpenPreferences(wxCommandEvent& ev);
   void onClosePreferences(wxCloseEvent& ev);
   void onExit(wxCommandEvent& ev);
-  void onLocal(wxCommandEvent& ev);
-  void onDev(wxCommandEvent& ev);
-  void onHom(wxCommandEvent& ev);
-  void onProd(wxCommandEvent& ev);
   void onTabMiddleUp(wxAuiNotebookEvent& ev);
+  void onAddView(wxCommandEvent& ev);
+  void onSwitchView(wxCommandEvent& ev);
 
   wxAuiNotebook * noteBook;
   wxPanel * panel;
 
-  wxMenuBar *menubar;
+  wxMenuBar * menubar;
+  std::list<const wxMenuItem *> views;
 
   LivecastTaskBarIcon * taskBar;
   LivecastControl * control;

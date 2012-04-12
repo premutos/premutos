@@ -31,17 +31,29 @@ public:
   ~LivecastConnection();
 
   void check(unsigned int streamId, boost::shared_ptr<boost::property_tree::ptree> result, bool details = false);
+  void reinit(unsigned int streamId);
+
 protected:
+  void perform();
   void handleConnect(const boost::system::error_code& error);
   void handleTimeout(const boost::system::error_code& error);
   void checkError(const boost::system::error_code& error) const;
   void parseResult(const char * result);
+
 private:
+  enum operation_t
+  {
+    STATUS,
+    STATUS_DETAIL,
+    REINIT,
+  };
+
   boost::asio::ip::tcp::socket socket;
   boost::asio::ip::tcp::resolver resolver;
   boost::asio::deadline_timer deadline_timer;
   boost::asio::strand strand;
 
+  operation_t op;
   unsigned int streamId;
   boost::shared_ptr<boost::property_tree::ptree> result;
   bool details;

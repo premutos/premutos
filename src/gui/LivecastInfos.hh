@@ -19,7 +19,8 @@ class LivecastInfos : public wxPanel
 public:
   LivecastInfos(wxWindow* parent);
 
-  boost::shared_ptr<monitor::ResultCallbackIntf> setInfos(const boost::shared_ptr<livecast::monitor::StreamInfos> infos);
+  boost::shared_ptr<monitor::ResultCallbackIntf> setInfos(boost::shared_ptr<const livecast::monitor::StreamInfos> infos);
+  void refresh();
 
 protected:
   void onTabMiddleUp(wxAuiNotebookEvent& event);
@@ -43,6 +44,9 @@ private:
   wxStaticText * enabledValue;
   wxStaticText * disableFilterValue;
 
+  boost::shared_ptr<const livecast::monitor::StreamInfos> streamInfos;
+
+  unsigned int currentSelectionPage;
 };
 
 }

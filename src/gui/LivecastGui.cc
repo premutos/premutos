@@ -20,10 +20,8 @@ enum livecast_menu_t
   LIVECAST_MENU_FILE_STREAM = 1,
   LIVECAST_MENU_FILE_QUIT,
   LIVECAST_MENU_EDIT_PREFERENCES,
-  LIVECAST_MENU_VIEW_LOCAL,
-  LIVECAST_MENU_VIEW_DEV,
-  LIVECAST_MENU_VIEW_HOM,
-  LIVECAST_MENU_VIEW_PROD,
+  LIVECAST_MENU_VIEW_ADD,
+  LIVECAST_MENU_VIEW_SWITCH,
 };
 
 LivecastGui::LivecastGui(boost::shared_ptr<GuiConfiguration> cfg, boost::shared_ptr<livecast::monitor::LivecastMonitor> monitor)
@@ -63,10 +61,18 @@ LivecastGui::LivecastGui(boost::shared_ptr<GuiConfiguration> cfg, boost::shared_
 
   // view menu
   wxMenu * view = new wxMenu;
-  view->AppendRadioItem(LIVECAST_MENU_VIEW_LOCAL, wxT("Local"), wxT(""));
-  view->AppendRadioItem(LIVECAST_MENU_VIEW_DEV, wxT("Developpement"), wxT(""));
-  view->AppendRadioItem(LIVECAST_MENU_VIEW_HOM, wxT("Homologation"), wxT(""));
-  view->AppendRadioItem(LIVECAST_MENU_VIEW_PROD, wxT("Production"), wxT(""));
+  view->Append(LIVECAST_MENU_VIEW_ADD, wxT("Add &View\tCtrl-v"), wxT("Add View"));
+
+  view->AppendSeparator();
+  // view->Remove(view->Append(-1, wxEmptyString));
+
+  std::list<std::string> l = this->cfg->getViews();
+  for (std::list<std::string>::const_iterator it = l.begin(); it != l.end(); ++it)
+  {
+    LogError::getInstance().sysLog(DEBUG, "add view %s", (*it).c_str());
+    const wxMenuItem * item = view->AppendRadioItem(LIVECAST_MENU_VIEW_SWITCH, *it, *it);
+    this->views.push_back(item);
+  }
 
   // help menu
   wxMenu * help = new wxMenu;
@@ -83,10 +89,9 @@ LivecastGui::LivecastGui(boost::shared_ptr<GuiConfiguration> cfg, boost::shared_
   this->Bind(wxEVT_COMMAND_MENU_SELECTED, &LivecastGui::onOpenStreamInformation, this, LIVECAST_MENU_FILE_STREAM);
   this->Bind(wxEVT_COMMAND_MENU_SELECTED, &LivecastGui::onExit, this, LIVECAST_MENU_FILE_QUIT);
   this->Bind(wxEVT_COMMAND_MENU_SELECTED, &LivecastGui::onOpenPreferences, this, LIVECAST_MENU_EDIT_PREFERENCES);
-  this->Bind(wxEVT_COMMAND_MENU_SELECTED, &LivecastGui::onLocal, this, LIVECAST_MENU_VIEW_LOCAL);
-  this->Bind(wxEVT_COMMAND_MENU_SELECTED, &LivecastGui::onDev, this, LIVECAST_MENU_VIEW_DEV);
-  this->Bind(wxEVT_COMMAND_MENU_SELECTED, &LivecastGui::onHom, this, LIVECAST_MENU_VIEW_HOM);
-  this->Bind(wxEVT_COMMAND_MENU_SELECTED, &LivecastGui::onProd, this, LIVECAST_MENU_VIEW_PROD);
+
+  this->Bind(wxEVT_COMMAND_MENU_SELECTED, &LivecastGui::onAddView, this, LIVECAST_MENU_VIEW_ADD);
+  this->Bind(wxEVT_COMMAND_MENU_SELECTED, &LivecastGui::onSwitchView, this, LIVECAST_MENU_VIEW_SWITCH);
 
   //
   // 
@@ -240,42 +245,6 @@ void LivecastGui::onExit(wxCommandEvent& WXUNUSED(ev))
   this->Destroy();
 }
 
-void LivecastGui::onLocal(wxCommandEvent& WXUNUSED(ev))
-{
-  LogError::getInstance().sysLog(DEBUG, "change view to local");
-  this->SetTitle(std::string(cfg->getMainWindowName()) + " LOCAL");
-  this->monitor->getConfiguration()->setAccess(Configuration::ACCESS_LOCAL);
-  this->monitor->getConfiguration()->load();
-  this->monitor->refresh(this->resultCb);
-}
-
-void LivecastGui::onDev(wxCommandEvent& WXUNUSED(ev))
-{
-  LogError::getInstance().sysLog(DEBUG, "change view to developpement");
-  this->SetTitle(std::string(cfg->getMainWindowName()) + " DEVELOPPEMENT");
-  this->monitor->getConfiguration()->setAccess(Configuration::ACCESS_DEV);
-  this->monitor->getConfiguration()->load();
-  this->monitor->refresh(this->resultCb);
-}
-
-void LivecastGui::onHom(wxCommandEvent& WXUNUSED(ev))
-{
-  LogError::getInstance().sysLog(DEBUG, "change view to homologation");
-  this->SetTitle(std::string(cfg->getMainWindowName()) + " HOMOLOGATION");
-  this->monitor->getConfiguration()->setAccess(Configuration::ACCESS_HOM);
-  this->monitor->getConfiguration()->load();
-  this->monitor->refresh(this->resultCb);
-}
-
-void LivecastGui::onProd(wxCommandEvent& WXUNUSED(ev))
-{
-  LogError::getInstance().sysLog(ERROR, "change view to production");
-  this->SetTitle(std::string(cfg->getMainWindowName()) + " PRODUCTION");
-  this->monitor->getConfiguration()->setAccess(Configuration::ACCESS_PROD);
-  this->monitor->getConfiguration()->load();
-  this->monitor->refresh(this->resultCb);
-}
-
 void LivecastGui::onTabMiddleUp(wxAuiNotebookEvent& event)
 {
   if (event.GetSelection() > 1)
@@ -284,3 +253,23 @@ void LivecastGui::onTabMiddleUp(wxAuiNotebookEvent& event)
   }
 }
 
+void LivecastGui::onAddView(wxCommandEvent& WXUNUSED(ev))
+{
+  LogError::getInstance().sysLog(ERROR, "add view");
+}
+
+void LivecastGui::onSwitchView(wxCommandEvent& ev)
+{
+  LogError::getInstance().sysLog(DEBUG, "switch view");
+  for (std::list<const wxMenuItem *>::const_iterator it = this->views.begin(); it != this->views.end(); ++it)
+  {
+    LogError::getInstance().sysLog(DEBUG, "%s is %s", (*it)->GetText().ToStdString().c_str(), (*it)->IsChecked() ? "checked" : "not checked");
+    if ((*it)->IsChecked())
+    {
+      this->SetTitle(std::string(cfg->getMainWindowName()) + " " + (*it)->GetText());
+      this->monitor->getConfiguration()->setAccessKey((*it)->GetText().ToStdString().c_str());
+      this->monitor->getConfiguration()->load();
+      this->monitor->refresh(this->resultCb);
+    }
+  }
+}

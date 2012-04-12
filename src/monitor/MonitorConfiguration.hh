@@ -26,7 +26,7 @@ public:
   virtual unsigned int getConnectionTimeout() const = 0;
 
   // db
-  virtual void setAccess(unsigned int i) = 0;
+  virtual void setAccessKey(const char *) = 0;
   virtual const char * getDbUser() const = 0;
   virtual const char * getDbPass() const = 0;
   virtual const char * getDbHost() const = 0;
