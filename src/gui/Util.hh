@@ -9,6 +9,8 @@ namespace gui {
 
 extern const wxColour lightYellow;
 extern const wxColour lightBlue;
+extern const wxColour grey;
+extern const wxColour green;
 extern const wxColour orange;
 
 std::ostream& operator<<(std::ostream& os, const livecast::monitor::StreamInfos::status_t status);

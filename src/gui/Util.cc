@@ -5,8 +5,10 @@
 namespace livecast {
 namespace gui {
 
-const wxColour lightYellow(255, 255, 226);
-const wxColour lightBlue(226, 255, 255);
+const wxColour lightYellow(255, 255, 240);
+const wxColour lightBlue(240, 255, 255);
+const wxColour grey(150, 150, 150);
+const wxColour green(16, 148, 66);
 const wxColour orange(225, 143, 26);
 
 std::ostream& operator<<(std::ostream& os, const livecast::monitor::StreamInfos::status_t status)

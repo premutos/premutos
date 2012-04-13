@@ -7,8 +7,49 @@
 #include "../monitor/MonitorConfiguration.hh"
 #include "../lib/Log.hh"
 
+#include <wx/treelistctrl.hh>
+
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/property_tree/xml_parser.hpp>
+
+namespace livecast {
+namespace gui {
+
+class LivecastTreeListCtrl : public wxTreeListCtrl
+{
+public:
+  LivecastTreeListCtrl(wxWindow * parent)
+    : wxTreeListCtrl(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_DEFAULT_STYLE | wxTR_HIDE_ROOT | wxTR_ROW_LINES),
+      sortOrder(true)
+    {
+      this->Bind(wxEVT_PAINT, &LivecastTreeListCtrl::onPaint, this, wxID_ANY);
+      this->Bind(wxEVT_COMMAND_LIST_COL_CLICK, &LivecastTreeListCtrl::onSort, this, wxID_ANY);
+    }
+
+protected:
+  void onPaint(wxPaintEvent& ev)
+    {
+      wxSize size = this->GetSize();
+      unsigned int width = this->GetColumnCount();
+      for (unsigned int i = 0; i < width; i++)
+      {
+        this->SetColumnWidth(i, size.GetWidth() / width);
+      }
+      ev.Skip();
+    }
+  void onSort(wxListEvent& ev)
+    {
+      LogError::getInstance().sysLog(ERROR, "click on col %d", ev.GetColumn());
+      this->SortChildren(this->GetRootItem(), ev.GetColumn(), this->sortOrder);
+      this->sortOrder = !this->sortOrder;
+    }
+private:
+  bool sortOrder;
+};
+
+}
+}
 
 using namespace livecast;
 using namespace livecast::gui;
@@ -36,14 +77,6 @@ LivecastServers::LivecastServers(wxWindow * parent, boost::shared_ptr<livecast::
   this->servers->InsertColumn(colIndex++, "admin port", wxLIST_FORMAT_LEFT);
 
   this->results = new wxAuiNotebook(this->splitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_NB_TOP);
-  this->statusList = new LivecastListCtrl(this->results);
-  colIndex = 0;
-  this->statusList->InsertColumn(colIndex++, "host", wxLIST_FORMAT_LEFT);
-  this->statusList->InsertColumn(colIndex++, "type", wxLIST_FORMAT_LEFT);
-  this->statusList->InsertColumn(colIndex++, "id", wxLIST_FORMAT_LEFT);
-  this->statusList->InsertColumn(colIndex++, "status", wxLIST_FORMAT_LEFT);
-  this->results->InsertPage(0, this->statusList, "status list", true);
-  this->results->Show(false);
   
   this->splitter->Initialize(this->servers);
 
@@ -51,11 +84,16 @@ LivecastServers::LivecastServers(wxWindow * parent, boost::shared_ptr<livecast::
   box->Add(this->splitter, 1, wxEXPAND | wxALL, 0);
   this->SetSizer(box);
 
+  // bind servers event
   this->servers->Bind(wxEVT_COMMAND_LIST_ITEM_ACTIVATED, &LivecastServers::onServersListDblClicked, this, wxID_ANY);
-  this->statusList->Bind(wxEVT_COMMAND_LIST_ITEM_ACTIVATED, &LivecastServers::onResultsListDblClicked, this, wxID_ANY);
-  this->statusList->Bind(wxEVT_COMMAND_LIST_ITEM_RIGHT_CLICK, &LivecastServers::onStatusListRightClicked, this, wxID_ANY);
-  this->results->Bind(wxEVT_COMMAND_AUINOTEBOOK_TAB_MIDDLE_UP, &LivecastServers::onTabMiddleUp, this, wxID_ANY);
   this->Connect(serversListEvent, wxCommandEventHandler(LivecastServers::onServersListUpdate));
+
+  // bind status event
+//   this->statusList->Bind(wxEVT_COMMAND_LIST_ITEM_ACTIVATED, &LivecastServers::onStatusDblClicked, this, wxID_ANY);
+//   this->statusList->Bind(wxEVT_COMMAND_LIST_ITEM_RIGHT_CLICK, &LivecastServers::onStatusRightClicked, this, wxID_ANY);
+
+  // bind results event
+  this->results->Bind(wxEVT_COMMAND_AUINOTEBOOK_TAB_MIDDLE_UP, &LivecastServers::onTabMiddleUp, this, wxID_ANY);
 
   this->Show(true);
 }
@@ -66,7 +104,7 @@ void LivecastServers::refresh()
   const MonitorConfiguration::connections_t& conns = monitor->getConfiguration()->getConnections();
   MonitorConfiguration::connections_t::const_iterator it;
   this->servers->DeleteAllItems();
-  this->statusList->DeleteAllItems();
+  // this->statusList->DeleteAllItems();
   this->results->Show(false);
   for (it = conns.begin(); it != conns.end(); ++it)
   {
@@ -98,40 +136,6 @@ void LivecastServers::onServersListUpdate(wxCommandEvent& WXUNUSED(event))
   this->refresh();
 }
 
-void LivecastServers::onStatusListRightClicked(wxListEvent& event)
-{
-  LogError::getInstance().sysLog(DEBUG, "right click on stream %u", event.GetItem().GetData());
-  void *data = reinterpret_cast<void *>(event.GetItem().GetData());
-	wxMenu menu;
-  menu.SetClientData(data);
-	menu.Append(POPUP_INFOS_DETAILS, "Get More Details");
-	menu.Append(POPUP_REINIT, "Reinit Stream");
-  menu.Bind(wxEVT_COMMAND_MENU_SELECTED, &LivecastServers::onPopupClick, this, wxID_ANY);
-	this->PopupMenu(&menu);
-}
-
-void LivecastServers::onPopupClick(wxCommandEvent& event)
-{
-  unsigned int streamId = reinterpret_cast<long>(static_cast<wxMenu *>(event.GetEventObject())->GetClientData());
-	switch(event.GetId()) 
-  {
-		case POPUP_INFOS_DETAILS:
-      LogError::getInstance().sysLog(ERROR, "popup infos details %u", streamId);
-			break;
-		case POPUP_REINIT:
-      LogError::getInstance().sysLog(ERROR, "popup reinit %u", streamId);
-			break;
-	}
-}
-
-void LivecastServers::onTabMiddleUp(wxAuiNotebookEvent& event)
-{
-  if (event.GetSelection() > 0)
-  {
-    this->results->DeletePage(event.GetSelection());
-  }
-}
-
 void LivecastServers::onServersListDblClicked(wxListEvent& event)
 {
   LogError::getInstance().sysLog(DEBUG, "double click on server item %d", event.GetIndex());
@@ -140,64 +144,64 @@ void LivecastServers::onServersListDblClicked(wxListEvent& event)
   std::advance(it, event.GetIndex());
   assert(it != conns.end());
 
-  // clean
-  this->statusList->DeleteAllItems();
-  for (unsigned int p = this->results->GetPageCount() - 1; p > 0; p--)
-  {
-    this->results->DeletePage(p);
-  }
-
   if (it != conns.end())
   {
     LogError::getInstance().sysLog(DEBUG, "[host:port] => [%s:%u]", it->first.first.c_str(), it->first.second);
     boost::shared_ptr<boost::property_tree::ptree> result(new boost::property_tree::ptree);
-    this->host = it->first.first;
-    this->type = monitor->getConfiguration()->getServerFromPort(it->first.second);
     this->connectionTmp = it->second;
-    this->connectionTmp->check(0, result);
-    this->fillList(this->statusList, *result);
+    this->connectionTmp->status(0, result, false);
+    this->connectionTmp->status(0, result, true);
+
+    std::ostringstream title;
+    title << "status on " << " " << it->first.first << " [" << monitor->getConfiguration()->getServerFromPort(it->first.second) << "]";
+    wxTreeListCtrl * status = new LivecastTreeListCtrl(this->results);
+    this->fillStatus(status, *result);    
+    this->results->InsertPage(this->results->GetPageCount(), status, title.str(), true);
     this->results->Show(true);
+
+    // resize columns
+    wxSize size = status->GetSize();
+    unsigned int width = status->GetColumnCount();
+    for (unsigned int i = 0; i < width; i++)
+    {
+      status->SetColumnWidth(i, size.GetWidth() / width);
+    }
+
     this->splitter->SplitHorizontally(this->servers, this->results, 0);
   }
 }
 
-void LivecastServers::onResultsListDblClicked(wxListEvent& event)
+void LivecastServers::onTabMiddleUp(wxAuiNotebookEvent& event)
 {
-  LogError::getInstance().sysLog(DEBUG, "double click on result item %d", event.GetIndex());
-
-  try
-  {
-    unsigned int streamId = boost::lexical_cast<unsigned int>(this->statusList->GetItemText(event.GetIndex(), 2));
-    bool detail = true;
-    boost::shared_ptr<boost::property_tree::ptree> result(new boost::property_tree::ptree);  
-    this->connectionTmp->check(streamId, result, detail);      
-    LivecastListCtrl * list = new LivecastListCtrl(this->results);
-    unsigned int colIndex = 0;
-    list->InsertColumn(colIndex++, "host", wxLIST_FORMAT_LEFT);
-    list->InsertColumn(colIndex++, "type", wxLIST_FORMAT_LEFT);
-    list->InsertColumn(colIndex++, "id", wxLIST_FORMAT_LEFT);
-    list->InsertColumn(colIndex++, "status", wxLIST_FORMAT_LEFT);    
-    this->fillList(list, *result);
-    std::ostringstream title;
-    title << "status details " << streamId;
-    this->results->InsertPage(this->results->GetPageCount(), list, title.str(), true);
-  }
-  catch (const boost::bad_lexical_cast& ex)
-  {
-    LogError::getInstance().sysLog(ERROR, "bad stream id: %s", ex.what());
-  }
-  catch (const std::exception& ex)
-  {
-    LogError::getInstance().sysLog(ERROR, "bad stream id: %s", ex.what());
-  }
-  catch (...)
-  {
-    LogError::getInstance().sysLog(ERROR, "unkwnow error");
-  }
+  this->results->DeletePage(event.GetSelection());
 }
 
-void LivecastServers::fillList(LivecastListCtrl * list, boost::property_tree::ptree& result) const
+void LivecastServers::fillStatus(wxTreeListCtrl * statusTree, boost::property_tree::ptree& result) const
 {
+//   std::cout << std::endl 
+//             << "============================================"
+//             << std::endl;
+//   boost::property_tree::write_xml(std::cout, result);
+//   std::cout << std::endl 
+//             << "============================================"
+//             << std::endl;
+
+  statusTree->SetBackgroundColour(wxColour(240,240,240));
+
+  statusTree->AddColumn ("Stream ID");
+  statusTree->AddColumn ("status");
+  statusTree->AddColumn ("message");
+
+  wxTreeItemId root = statusTree->AddRoot ("");
+  statusTree->SetItemText(root, 1, "");
+  statusTree->SetItemText(root, 2, "");
+  statusTree->SetItemFont(root, wxFont(1, wxFONTFAMILY_SWISS, wxFONTSTYLE_ITALIC, wxFONTWEIGHT_BOLD));
+
+  unsigned int n = 0;
+  wxTreeItemId parent;
+  wxTreeItemId item;
+  unsigned int previousId = 0;
+  std::map<unsigned int, wxTreeItemId> streamIds;
   for (boost::property_tree::ptree::const_iterator itResult = result.get_child("").begin(); 
        itResult != result.get_child("").end(); ++itResult)
   {
@@ -207,16 +211,17 @@ void LivecastServers::fillList(LivecastListCtrl * list, boost::property_tree::pt
     typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
     boost::char_separator<char> sep("\n");
     tokenizer tok(status, sep);
-    unsigned int index = 0;
     for (tokenizer::iterator it = tok.begin(); it != tok.end(); ++it)
     {
       std::string streamId = (*it);
       std::string statusStr = (*it);
+      std::string messageStr = (*it);
       const std::string::size_type pos = (*it).find(" ");
       if (pos != std::string::npos)
       {
         streamId = (*it).substr(0, pos);
         statusStr = (*it).substr(pos + 1);
+        messageStr = (*it).substr(pos + 1);
       }
       
       unsigned int id = 0;
@@ -226,24 +231,43 @@ void LivecastServers::fillList(LivecastListCtrl * list, boost::property_tree::pt
       }
       catch (const boost::bad_lexical_cast& ex)
       {
-        streamId = "n/a";
+        continue;
+      }
+
+      std::map<unsigned int, wxTreeItemId>::const_iterator itStream = streamIds.find(id);
+      if (itStream != streamIds.end())
+      {
+        // add status details
+        item = statusTree->AppendItem (itStream->second, streamId.c_str());
+      }
+      else
+      {
+        // add entry for this stream
+        item = statusTree->AppendItem (root, streamId.c_str());
+        streamIds.insert(std::make_pair(id, item));
       }
       
-      wxListItem item;
-      item.SetId(index);
-      item.SetData(id);
-      list->InsertItem(item);
-
-      list->SetItem(index, 0, this->host.c_str());
-      list->SetItem(index, 1, this->type.c_str());
-      list->SetItem(index, 2, streamId.c_str());
-      list->SetItem(index, 3, statusStr.c_str());
+      unsigned int col = 1;
+      statusTree->SetItemText(item, col++, statusStr.c_str());
+      statusTree->SetItemText(item, col++, messageStr.c_str());
 
       StreamInfos::status_t status = StreamInfos::parseStatus(*it);
-      list->SetItemTextColour(index, status);
-      list->SetItemBackgroundColour(index, wxColour(wxColour(((index % 2) == 0) ? lightYellow : lightBlue)));
-      index++;
+
+      switch (status)
+      {  
+      case StreamInfos::STATUS_WAITING:      statusTree->SetItemTextColour(item, wxColour(wxColour(grey)));    break;
+      case StreamInfos::STATUS_INITIALIZING: statusTree->SetItemTextColour(item, wxColour(wxColour(*wxBLUE))); break;
+      case StreamInfos::STATUS_RUNNING:      statusTree->SetItemTextColour(item, wxColour(wxColour(green)));   break;
+      case StreamInfos::STATUS_ERROR:        statusTree->SetItemTextColour(item, wxColour(wxColour(*wxRED)));  break;
+      case StreamInfos::STATUS_UNKNOWN:      statusTree->SetItemTextColour(item, wxColour(wxColour(orange)));  break;
+      }  
+
+      statusTree->SetItemBackgroundColour(item, wxColour(wxColour(((n % 2) == 0) ? lightYellow : lightBlue)));
+      n++;
+
     }
   }
+  
+  statusTree->Expand(root);
 }
 

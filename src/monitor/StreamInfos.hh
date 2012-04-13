@@ -95,14 +95,14 @@ public:
   StreamInfos(unsigned int streamId);
   ~StreamInfos();
   
-  void check(boost::shared_ptr<ResultCallbackIntf> resultCb, const boost::shared_ptr<MonitorConfiguration> cfg);
+  void status(boost::shared_ptr<ResultCallbackIntf> resultCb, const boost::shared_ptr<MonitorConfiguration> cfg);
   void reinit(const boost::shared_ptr<MonitorConfiguration> cfg);
   void loadInfos(const boost::shared_ptr<MonitorConfiguration> cfg);
   void parseStatus();
   void addServer(const server_t& server, bool primary);
 
   inline unsigned int getId() const { return this->streamId; }
-  inline status_t getStatus() const { return this->status; }
+  inline status_t getStatus() const { return this->globalStatus; }
   inline const boost::property_tree::ptree& getResultTree() const { return this->resultTree; }
   inline const infos_t& getInfos() const { return this->infos; }
   inline const servers_t& getServers() const { return this->servers; }
@@ -113,7 +113,7 @@ public:
 
 private:
   unsigned int streamId;
-  status_t status;
+  status_t globalStatus;
   boost::property_tree::ptree resultTree;
   infos_t infos;
   profiles_t profiles;

@@ -28,7 +28,7 @@ StreamInfos::status_t getGlobalStatus(const std::list<std::string>& serversStatu
 
 StreamInfos::StreamInfos(unsigned int streamId)
   : streamId(streamId),
-    status(STATUS_UNKNOWN),
+    globalStatus(STATUS_UNKNOWN),
     modified(false)
 {
 }
@@ -37,10 +37,10 @@ StreamInfos::~StreamInfos()
 {
 }
 
-void StreamInfos::check(boost::shared_ptr<ResultCallbackIntf> resultCb,
-                        const boost::shared_ptr<MonitorConfiguration> cfg)
+void StreamInfos::status(boost::shared_ptr<ResultCallbackIntf> resultCb,
+                         const boost::shared_ptr<MonitorConfiguration> cfg)
 {
-  LogError::getInstance().sysLog(DEBUG, "start checking %u", this->streamId);
+  LogError::getInstance().sysLog(DEBUG, "start status %u", this->streamId);
   this->modified = false;
   boost::property_tree::ptree resultTmp = this->resultTree;
   this->resultTree.clear();
@@ -54,7 +54,7 @@ void StreamInfos::check(boost::shared_ptr<ResultCallbackIntf> resultCb,
       for (std::list<server_t>::iterator it = this->servers[i][j].begin(); it != this->servers[i][j].end(); ++it)
       {
         boost::shared_ptr<LivecastConnection> conn = cfg->getConnection((*it).host, (*it).adminPort);
-        conn->check(this->streamId, statusHost);
+        conn->status(this->streamId, statusHost);
 
         for (boost::property_tree::ptree::iterator itResult = statusHost->get_child("").begin();
              itResult != statusHost->get_child("").end(); ++itResult)
@@ -110,7 +110,7 @@ void StreamInfos::check(boost::shared_ptr<ResultCallbackIntf> resultCb,
 
   this->resultTree.push_back(boost::property_tree::ptree::value_type("status", ptree)); 
 
-  LogError::getInstance().sysLog(DEBUG, "end checking %u", this->streamId);
+  LogError::getInstance().sysLog(DEBUG, "end status %u", this->streamId);
 
   this->parseStatus();
 
@@ -237,7 +237,7 @@ void StreamInfos::parseStatus()
   }    
   
   // merge in a global status
-  this->status = wingsStatus[0].second; // primary
+  this->globalStatus = wingsStatus[0].second; // primary
     
 //   switch (this->status)
 //   {  

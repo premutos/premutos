@@ -56,7 +56,7 @@ void LivecastMonitor::check(unsigned int streamId,
   if (it != this->cfg->getStreamsInfos().end())
   {
     it->second->loadInfos(this->cfg);
-    boost::thread thread(boost::bind(&StreamInfos::check, it->second, resultCb, this->cfg));
+    boost::thread thread(boost::bind(&StreamInfos::status, it->second, resultCb, this->cfg));
   }
 }
 
@@ -103,7 +103,7 @@ void LivecastMonitor::handleRefresh(const boost::system::error_code& error)
     if (this->resultCallback)
     {
       LogError::getInstance().sysLog(DEBUG, "===> refresh");
-      this->refresh(this->resultCallback);
+      // this->refresh(this->resultCallback);
     }
     this->refresh_timer.expires_from_now(boost::posix_time::seconds(2));
     this->refresh_timer.async_wait(boost::bind(&LivecastMonitor::handleRefresh, this, boost::asio::placeholders::error));

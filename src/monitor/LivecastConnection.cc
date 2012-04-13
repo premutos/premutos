@@ -20,7 +20,6 @@ LivecastConnection::LivecastConnection(boost::asio::io_service& io_service,
     deadline_timer(io_service),
     strand(io_service),
     streamId(0),
-    details(false),
     data_ready(false),
     host(host),
     port(port),
@@ -34,14 +33,20 @@ LivecastConnection::~LivecastConnection()
 {
 }
 
-void LivecastConnection::check(unsigned int streamId, boost::shared_ptr<boost::property_tree::ptree> result, bool details)
+void LivecastConnection::status(unsigned int streamId, boost::shared_ptr<boost::property_tree::ptree> result, bool details)
 {
   boost::unique_lock<boost::mutex> lockCheck(this->checkMut);
   boost::unique_lock<boost::mutex> lockSync(this->syncMut);
   this->streamId = streamId;
   this->result = result;
-  this->details = details;
-  this->op = STATUS;
+  if (details)
+  {
+    this->op = STATUS_DETAIL;
+  }
+  else
+  {
+    this->op = STATUS;
+  }
 
   this->perform();
 
