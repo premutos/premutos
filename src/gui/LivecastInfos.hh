@@ -19,7 +19,7 @@ class LivecastInfos : public wxPanel
 public:
   LivecastInfos(wxWindow* parent);
 
-  boost::shared_ptr<monitor::ResultCallbackIntf> setInfos(boost::shared_ptr<const livecast::monitor::StreamInfos> infos);
+  std::list<boost::shared_ptr<monitor::ResultCallbackIntf> > setInfos(boost::shared_ptr<const livecast::monitor::StreamInfos> infos);
   void refresh();
 
 protected:
@@ -30,7 +30,8 @@ private:
   wxPanel * infos;
   LivecastListCtrl * profiles;
   LivecastListCtrl * servers;
-  LivecastStatus * statusSchema;
+  LivecastStatus * primaryStatusSchema;
+  LivecastStatus * backupStatusSchema;
 
   wxStaticText * idValue;
   wxStaticText * modeValue;

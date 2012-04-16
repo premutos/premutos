@@ -11,12 +11,13 @@ using namespace livecast;
 using namespace livecast::monitor;
 using namespace livecast::gui;
 
-LivecastStatus::LivecastStatus(wxWindow * parent, boost::shared_ptr<const StreamInfos> streamInfos, bool noTree)
+LivecastStatus::LivecastStatus(wxWindow * parent, boost::shared_ptr<const StreamInfos> streamInfos, bool noTree, bool primary)
   : wxPanel(parent, wxID_ANY),
     checkStreamEvent(wxNewEventType()),
     streamId(streamInfos->getId()),
     streamInfos(streamInfos),
-    noTree(noTree)
+    noTree(noTree),
+    primary(primary)
 { 
   wxBoxSizer * box = new wxBoxSizer(wxHORIZONTAL);
   if (this->noTree)
@@ -85,7 +86,8 @@ void LivecastStatus::onCheckStream(wxCommandEvent& ev)
   // schema
   const boost::property_tree::ptree& statusInfos = this->streamInfos->getResultTree();
   unsigned int id = 0;
-  for (boost::property_tree::ptree::const_iterator it = statusInfos.get_child("status.primary").begin(); it != statusInfos.get_child("status.primary").end(); ++it)
+  std::string row = this->primary ? "status.primary" : "status.backup";
+  for (boost::property_tree::ptree::const_iterator it = statusInfos.get_child(row.c_str()).begin(); it != statusInfos.get_child(row.c_str()).end(); ++it)
   {
     const boost::optional<std::string> typeStr = it->second.get_optional<std::string>("type");
     const boost::optional<std::string> statusStr = it->second.get_optional<std::string>("result");

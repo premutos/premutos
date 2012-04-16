@@ -145,7 +145,7 @@ LivecastInfos::LivecastInfos(wxWindow * parent)
   this->SetSizer(box);
 }
 
-boost::shared_ptr<ResultCallbackIntf> LivecastInfos::setInfos(boost::shared_ptr<const livecast::monitor::StreamInfos> streamInfos)
+std::list<boost::shared_ptr<ResultCallbackIntf> > LivecastInfos::setInfos(boost::shared_ptr<const livecast::monitor::StreamInfos> streamInfos)
 {
 
   this->currentSelectionPage = this->noteBook->GetSelection();
@@ -221,19 +221,28 @@ boost::shared_ptr<ResultCallbackIntf> LivecastInfos::setInfos(boost::shared_ptr<
     }
   }
 
-  // status schema
   for (size_t i = 2; i < this->noteBook->GetPageCount(); i++)
   {
     this->noteBook->RemovePage(i);
   }
-  this->statusSchema = new LivecastStatus(this->noteBook, streamInfos, true);
-  this->noteBook->InsertPage(3, this->statusSchema, "status schema", true);
+
+  // primary status schema
+  this->primaryStatusSchema = new LivecastStatus(this->noteBook, streamInfos, true);
+  this->noteBook->InsertPage(3, this->primaryStatusSchema, "primary schema", true);
+
+  // backup status schema
+  this->backupStatusSchema = new LivecastStatus(this->noteBook, streamInfos, true, false);
+  this->noteBook->InsertPage(4, this->backupStatusSchema, "backup schema", true);
 
   // set selection on servers list
   this->noteBook->SetSelection((this->currentSelectionPage < this->noteBook->GetPageCount()) ? this->currentSelectionPage : 0);
 
-  boost::shared_ptr<LivecastStatusCallback> cb(new LivecastStatusCallback(this->statusSchema));
-  return cb;
+  boost::shared_ptr<LivecastStatusCallback> cb1(new LivecastStatusCallback(this->primaryStatusSchema));
+  boost::shared_ptr<LivecastStatusCallback> cb2(new LivecastStatusCallback(this->backupStatusSchema));
+  std::list<boost::shared_ptr<ResultCallbackIntf> > cbs;
+  cbs.push_back(cb1);
+  cbs.push_back(cb2);
+  return cbs;
 }
 
 void LivecastInfos::refresh()
@@ -246,7 +255,7 @@ void LivecastInfos::refresh()
 
 void LivecastInfos::onTabMiddleUp(wxAuiNotebookEvent& event)
 {
-  if (event.GetSelection() > 2)
+  if (event.GetSelection() > 3)
   {
     this->noteBook->DeletePage(event.GetSelection());
   }

@@ -198,8 +198,8 @@ void LivecastGui::onOpenStreamInformation(wxCommandEvent& WXUNUSED(ev))
       wxFrame * frame = new wxFrame(this, wxID_ANY, "full stream infos " + idStr);
 
       LivecastInfos * livecastInfos = new LivecastInfos(frame);
-      boost::shared_ptr<ResultCallbackIntf> cb = livecastInfos->setInfos(this->monitor->getStreamInfos(id));
-      this->monitor->check(id, cb);
+      std::list<boost::shared_ptr<ResultCallbackIntf> > cbs = livecastInfos->setInfos(this->monitor->getStreamInfos(id));
+      std::for_each(cbs.begin(), cbs.end(), boost::bind(&livecast::monitor::LivecastMonitor::check, this->monitor, id, _1));
       wxBoxSizer * box = new wxBoxSizer(wxVERTICAL);
       box->Add(livecastInfos, 1, wxEXPAND | wxALL, 0);
       frame->SetSizer(box);

@@ -209,11 +209,11 @@ void LivecastConnection::checkError(const boost::system::error_code& error) cons
   }
 }
 
-void LivecastConnection::parseResult(const char * result)
+void LivecastConnection::parseResult(const char * result_str)
 {
   boost::property_tree::ptree ptree;
   ptree.put("type", this->conf->getServerFromPort(this->port).c_str());
-  std::string result_ss(result);
+  std::string result_ss(result_str);
   boost::algorithm::erase_last(result_ss, "\n");
   std::string::size_type pos = result_ss.find_last_of("\n");
   if (pos != std::string::npos)

@@ -233,8 +233,8 @@ void LivecastResult::onStreamListItemActivated(wxListEvent& event)
   MonitorConfiguration::map_streams_infos_t::const_iterator it = cfg->getStreamsInfos().begin();
   std::advance(it, event.GetIndex());
   assert(it != cfg->getStreamsInfos().end());
-  boost::shared_ptr<ResultCallbackIntf> cb = this->infos->setInfos(it->second);
-  this->monitor->check(it->second->getId(), cb);
+  std::list<boost::shared_ptr<ResultCallbackIntf> > cbs = this->infos->setInfos(it->second);
+  std::for_each(cbs.begin(), cbs.end(), boost::bind(&LivecastMonitor::check, this->monitor, it->second->getId(), _1));
   this->infos->Show(true);
   this->splitter->SplitHorizontally(this->list, this->infos, 0);
 }
@@ -282,8 +282,8 @@ void LivecastResult::onPopupClick(wxCommandEvent& event)
     LogError::getInstance().sysLog(DEBUG, "popup infos %u", streamId);
     MonitorConfiguration::map_streams_infos_t::const_iterator it = cfg->getStreamsInfos().find(streamId);
     assert(it != cfg->getStreamsInfos().end());
-    boost::shared_ptr<ResultCallbackIntf> cb = this->infos->setInfos(it->second);
-    this->monitor->check(it->second->getId(), cb);
+    std::list<boost::shared_ptr<ResultCallbackIntf> > cbs = this->infos->setInfos(it->second);
+    std::for_each(cbs.begin(), cbs.end(), boost::bind(&livecast::monitor::LivecastMonitor::check, this->monitor, it->second->getId(), _1));
     this->infos->Show(true);
     this->splitter->SplitHorizontally(this->list, this->infos, 0);
   }

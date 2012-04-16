@@ -5,6 +5,7 @@
 #include "../monitor/StreamInfos.hh"
 #include <wx/wx.h>
 #include <wx/treectrl.h>
+#include <list>
 #include <boost/property_tree/ptree.hpp>
 
 namespace livecast {
@@ -15,7 +16,7 @@ class StatusSchema;
 class LivecastStatus : public wxPanel
 {
 public:
-  LivecastStatus(wxWindow * parent, boost::shared_ptr<const livecast::monitor::StreamInfos> streamInfos, bool noTree = false);
+  LivecastStatus(wxWindow * parent, boost::shared_ptr<const livecast::monitor::StreamInfos> streamInfos, bool noTree = false, bool primary = true);
   ~LivecastStatus();
   
   void commitCheckStream(unsigned int streamId);
@@ -31,6 +32,7 @@ private:
   unsigned int streamId;
   boost::shared_ptr<const livecast::monitor::StreamInfos> streamInfos;
   const bool noTree;
+  const bool primary;
 };
 
 class LivecastStatusCallback : public livecast::monitor::ResultCallbackIntf
