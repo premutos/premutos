@@ -183,7 +183,7 @@ std::list<boost::shared_ptr<ResultCallbackIntf> > LivecastInfos::setInfos(boost:
     {
       this->profiles->SetItem(index, i, (*it)[i]);
     }
-    this->profiles->SetItemBackgroundColour(index, wxColour(wxColour(((index % 2) == 0) ? lightYellow : lightBlue)));
+    this->profiles->SetItemBackgroundColour(index, wxColour(wxColour(((index % 2) == 0) ? livecast_lightYellow : livecast_lightBlue)));
     n++;
   }
 
@@ -229,14 +229,14 @@ std::list<boost::shared_ptr<ResultCallbackIntf> > LivecastInfos::setInfos(boost:
 
         switch ((*it).status)
         {  
-        case StreamInfos::STATUS_WAITING:      this->servers->SetItemTextColour(item, wxColour(wxColour(grey)));    break;
-        case StreamInfos::STATUS_INITIALIZING: this->servers->SetItemTextColour(item, wxColour(wxColour(*wxBLUE))); break;
-        case StreamInfos::STATUS_RUNNING:      this->servers->SetItemTextColour(item, wxColour(wxColour(green)));   break;
-        case StreamInfos::STATUS_ERROR:        this->servers->SetItemTextColour(item, wxColour(wxColour(*wxRED)));  break;
-        case StreamInfos::STATUS_UNKNOWN:      this->servers->SetItemTextColour(item, wxColour(wxColour(orange)));  break;
+        case StreamInfos::STATUS_WAITING:      this->servers->SetItemTextColour(item, wxColour(wxColour(livecast_grey)));     break;
+        case StreamInfos::STATUS_INITIALIZING: this->servers->SetItemTextColour(item, wxColour(wxColour(livecast_yellow)));   break;
+        case StreamInfos::STATUS_RUNNING:      this->servers->SetItemTextColour(item, wxColour(wxColour(livecast_green)));    break;
+        case StreamInfos::STATUS_ERROR:        this->servers->SetItemTextColour(item, wxColour(wxColour(livecast_red)));      break;
+        case StreamInfos::STATUS_UNKNOWN:      this->servers->SetItemTextColour(item, wxColour(wxColour(livecast_darkGrey))); break;
         }  
 
-        this->servers->SetItemBackgroundColour(item, wxColour(wxColour(((n % 2) == 0) ? lightYellow : lightBlue)));
+        this->servers->SetItemBackgroundColour(item, wxColour(wxColour(((n % 2) == 0) ? livecast_lightYellow : livecast_lightBlue)));
 
         // add details
         unsigned int nDetails = n + 1;
@@ -253,14 +253,14 @@ std::list<boost::shared_ptr<ResultCallbackIntf> > LivecastInfos::setInfos(boost:
           
           switch ((*itDetails).get<0>())
           {  
-          case StreamInfos::STATUS_WAITING:      this->servers->SetItemTextColour(itemDetails, wxColour(wxColour(grey)));    break;
-          case StreamInfos::STATUS_INITIALIZING: this->servers->SetItemTextColour(itemDetails, wxColour(wxColour(*wxBLUE))); break;
-          case StreamInfos::STATUS_RUNNING:      this->servers->SetItemTextColour(itemDetails, wxColour(wxColour(green)));   break;
-          case StreamInfos::STATUS_ERROR:        this->servers->SetItemTextColour(itemDetails, wxColour(wxColour(*wxRED)));  break;
-          case StreamInfos::STATUS_UNKNOWN:      this->servers->SetItemTextColour(itemDetails, wxColour(wxColour(orange)));  break;
+          case StreamInfos::STATUS_WAITING:      this->servers->SetItemTextColour(itemDetails, wxColour(wxColour(livecast_grey)));     break;
+          case StreamInfos::STATUS_INITIALIZING: this->servers->SetItemTextColour(itemDetails, wxColour(wxColour(livecast_yellow)));   break;
+          case StreamInfos::STATUS_RUNNING:      this->servers->SetItemTextColour(itemDetails, wxColour(wxColour(livecast_green)));    break;
+          case StreamInfos::STATUS_ERROR:        this->servers->SetItemTextColour(itemDetails, wxColour(wxColour(livecast_red)));      break;
+          case StreamInfos::STATUS_UNKNOWN:      this->servers->SetItemTextColour(itemDetails, wxColour(wxColour(livecast_darkGrey))); break;
           }  
           
-          this->servers->SetItemBackgroundColour(itemDetails, wxColour(wxColour(((nDetails % 2) == 0) ? lightYellow : lightBlue)));
+          this->servers->SetItemBackgroundColour(itemDetails, wxColour(wxColour(((nDetails % 2) == 0) ? livecast_lightYellow : livecast_lightBlue)));
           nDetails++;
         }
 

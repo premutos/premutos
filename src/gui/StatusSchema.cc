@@ -1,4 +1,5 @@
 #include "StatusSchema.hh"
+#include "Util.hh"
 #include "../lib/Log.hh"
 #include <algorithm>
 
@@ -219,14 +220,17 @@ void StatusSchema::drawServer(wxPaintDC& dc, const boost::shared_ptr<server_t> s
                                  0, 0, this->GetSize().GetWidth(), this->GetSize().GetHeight());
 
   wxBrush brush = dc.GetBrush();
+  wxBrush brushTmp = brush;
   switch (server->status)
   {
-  case STATUS_WAITING:      dc.SetBrush(*wxGREY_BRUSH);   break;
-  case STATUS_INITIALIZING: dc.SetBrush(*wxYELLOW_BRUSH); break;
-  case STATUS_RUNNING:      dc.SetBrush(*wxGREEN_BRUSH);  break;
-  case STATUS_ERROR:        dc.SetBrush(*wxRED_BRUSH);    break;
-  case STATUS_UNKNOWN:      dc.SetBrush(*wxRED_BRUSH);    break;
+  case STATUS_WAITING:      brushTmp.SetColour(livecast_grey);     break;
+  case STATUS_INITIALIZING: brushTmp.SetColour(livecast_yellow);   break;
+  case STATUS_RUNNING:      brushTmp.SetColour(livecast_green);    break;
+  case STATUS_ERROR:        brushTmp.SetColour(livecast_red);      break;
+  case STATUS_UNKNOWN:      brushTmp.SetColour(livecast_darkGrey); break;
   };
+  
+  dc.SetBrush(brushTmp);
 
   dc.DrawRectangle(r);
 

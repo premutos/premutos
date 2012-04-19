@@ -7,11 +7,13 @@
 namespace livecast {
 namespace gui {
 
-extern const wxColour lightYellow;
-extern const wxColour lightBlue;
-extern const wxColour grey;
-extern const wxColour green;
-extern const wxColour orange;
+extern const wxColour livecast_lightYellow;
+extern const wxColour livecast_lightBlue;
+extern const wxColour livecast_grey;
+extern const wxColour livecast_yellow;
+extern const wxColour livecast_green;
+extern const wxColour livecast_red;
+extern const wxColour livecast_darkGrey;
 
 std::ostream& operator<<(std::ostream& os, const livecast::monitor::StreamInfos::status_t status);
 

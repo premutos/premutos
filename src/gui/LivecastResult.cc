@@ -104,13 +104,13 @@ wxListItemAttr * LivecastListCtrlVirtual::OnGetItemAttr(long item) const
   {
     switch (it->second->getStatus())
     {  
-    case StreamInfos::STATUS_WAITING:      fgColour = *wxLIGHT_GREY; break;
-    case StreamInfos::STATUS_INITIALIZING: fgColour = *wxBLUE;       break;
-    case StreamInfos::STATUS_RUNNING:      fgColour = *wxGREEN;      break;
-    case StreamInfos::STATUS_ERROR:        fgColour = *wxRED;        break;
-    case StreamInfos::STATUS_UNKNOWN:      fgColour = orange; break;
+    case StreamInfos::STATUS_WAITING:      fgColour = livecast_grey;     break;
+    case StreamInfos::STATUS_INITIALIZING: fgColour = livecast_yellow;   break;
+    case StreamInfos::STATUS_RUNNING:      fgColour = livecast_green;    break;
+    case StreamInfos::STATUS_ERROR:        fgColour = livecast_red;      break;
+    case StreamInfos::STATUS_UNKNOWN:      fgColour = livecast_darkGrey; break;
     }  
-    bgColour = (((item % 2) == 0) ? lightYellow : lightBlue);
+    bgColour = (((item % 2) == 0) ? livecast_lightYellow : livecast_lightBlue);
   }
 
   wxListItemAttr * attr = new wxListItemAttr(fgColour, bgColour, wxFont());
@@ -330,7 +330,7 @@ void LivecastResult::updateItem(MonitorConfiguration::map_streams_infos_t::const
   unsigned int n = std::distance(MonitorConfiguration::map_streams_infos_t::const_iterator(cfg->getStreamsInfos().begin()), it);
   
   this->list->SetItemTextColour(n, it->second->getStatus());
-  this->list->SetItemBackgroundColour(n, wxColour(wxColour(((n % 2) == 0) ? lightYellow : lightBlue)));
+  this->list->SetItemBackgroundColour(n, wxColour(wxColour(((n % 2) == 0) ? livecast_lightYellow : livecast_lightBlue)));
   
   std::ostringstream ossStreamId;
   std::ostringstream ossStreamStatus;

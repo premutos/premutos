@@ -36,11 +36,11 @@ void LivecastListCtrl::SetItemTextColour(long item, StreamInfos::status_t status
 {
   switch (status)
   {  
-  case StreamInfos::STATUS_WAITING:      this->wxListView::SetItemTextColour(item, wxColour(wxColour(grey)));    break;
-  case StreamInfos::STATUS_INITIALIZING: this->wxListView::SetItemTextColour(item, wxColour(wxColour(*wxBLUE))); break;
-  case StreamInfos::STATUS_RUNNING:      this->wxListView::SetItemTextColour(item, wxColour(wxColour(green)));   break;
-  case StreamInfos::STATUS_ERROR:        this->wxListView::SetItemTextColour(item, wxColour(wxColour(*wxRED)));  break;
-  case StreamInfos::STATUS_UNKNOWN:      this->wxListView::SetItemTextColour(item, wxColour(wxColour(orange)));  break;
+  case StreamInfos::STATUS_WAITING:      this->wxListView::SetItemTextColour(item, wxColour(wxColour(livecast_grey)));     break;
+  case StreamInfos::STATUS_INITIALIZING: this->wxListView::SetItemTextColour(item, wxColour(wxColour(livecast_yellow)));   break;
+  case StreamInfos::STATUS_RUNNING:      this->wxListView::SetItemTextColour(item, wxColour(wxColour(livecast_green)));    break;
+  case StreamInfos::STATUS_ERROR:        this->wxListView::SetItemTextColour(item, wxColour(wxColour(livecast_red)));      break;
+  case StreamInfos::STATUS_UNKNOWN:      this->wxListView::SetItemTextColour(item, wxColour(wxColour(livecast_darkGrey))); break;
   }  
 }
 

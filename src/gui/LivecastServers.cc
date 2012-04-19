@@ -123,7 +123,7 @@ void LivecastServers::refresh()
     this->servers->SetItem(index, 2, ip);
     this->servers->SetItem(index, 3, portSS.str().c_str());
 
-    this->servers->SetItemBackgroundColour(index, wxColour(wxColour(((index % 2) == 0) ? lightYellow : lightBlue)));
+    this->servers->SetItemBackgroundColour(index, wxColour(wxColour(((index % 2) == 0) ? livecast_lightYellow : livecast_lightBlue)));
     index++;
   }
 }
@@ -250,14 +250,14 @@ void LivecastServers::fillStatus(wxTreeListCtrl * statusTree, boost::property_tr
 
       switch (status)
       {  
-      case StreamInfos::STATUS_WAITING:      statusTree->SetItemTextColour(item, wxColour(wxColour(grey)));    break;
-      case StreamInfos::STATUS_INITIALIZING: statusTree->SetItemTextColour(item, wxColour(wxColour(*wxBLUE))); break;
-      case StreamInfos::STATUS_RUNNING:      statusTree->SetItemTextColour(item, wxColour(wxColour(green)));   break;
-      case StreamInfos::STATUS_ERROR:        statusTree->SetItemTextColour(item, wxColour(wxColour(*wxRED)));  break;
-      case StreamInfos::STATUS_UNKNOWN:      statusTree->SetItemTextColour(item, wxColour(wxColour(orange)));  break;
+      case StreamInfos::STATUS_WAITING:      statusTree->SetItemTextColour(item, wxColour(wxColour(livecast_grey)));     break;
+      case StreamInfos::STATUS_INITIALIZING: statusTree->SetItemTextColour(item, wxColour(wxColour(livecast_yellow)));   break;
+      case StreamInfos::STATUS_RUNNING:      statusTree->SetItemTextColour(item, wxColour(wxColour(livecast_green)));    break;
+      case StreamInfos::STATUS_ERROR:        statusTree->SetItemTextColour(item, wxColour(wxColour(livecast_red)));      break;
+      case StreamInfos::STATUS_UNKNOWN:      statusTree->SetItemTextColour(item, wxColour(wxColour(livecast_darkGrey))); break;
       }  
 
-      statusTree->SetItemBackgroundColour(item, wxColour(wxColour(((n % 2) == 0) ? lightYellow : lightBlue)));
+      statusTree->SetItemBackgroundColour(item, wxColour(wxColour(((n % 2) == 0) ? livecast_lightYellow : livecast_lightBlue)));
       n++;
 
     }
