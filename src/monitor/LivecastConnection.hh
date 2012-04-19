@@ -15,7 +15,7 @@ namespace monitor {
 class MonitorConfiguration;
 class ResultCallbackIntf;
 
-class LivecastConnectionException
+class LivecastConnectionException : public std::exception
 {
 };
 

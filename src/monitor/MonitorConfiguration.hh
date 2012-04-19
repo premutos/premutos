@@ -24,6 +24,7 @@ public:
   virtual ~MonitorConfiguration();
   
   virtual unsigned int getConnectionTimeout() const = 0;
+  virtual unsigned int getRefreshPeriod() const = 0;
 
   // db
   virtual void setAccessKey(const char *) = 0;

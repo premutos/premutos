@@ -3,6 +3,7 @@
 #include <algorithm>
 
 using namespace livecast::gui;
+using namespace livecast::lib;
 
 StatusSchema::StatusSchema(wxWindow * parent)
   : wxControl(parent, wxID_ANY),
@@ -59,7 +60,7 @@ void StatusSchema::linkAllServers()
       }
       this->links.push_back(l2);
     }
-    else if ((*itSrc)->type == SERVER_MASTERBOX)
+    else if (((*itSrc)->type == SERVER_MASTERBOX) && (!(*itSrc)->leaf))
     {
       link_t l;
       for (servers_t::iterator itDst = this->servers.begin(); itDst != this->servers.end(); ++itDst)

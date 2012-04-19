@@ -11,10 +11,10 @@
 
 using namespace livecast;
 using namespace livecast::monitor;
+using namespace livecast::lib;
 
 LivecastMonitor::LivecastMonitor(boost::shared_ptr<MonitorConfiguration> cfg)
-  : refreshPeriod(boost::posix_time::milliseconds(1000)),
-    refresh_timer(io_service),
+  : refresh_timer(io_service),
     deadline_timer(io_service),
     cfg(cfg)
 {
@@ -26,7 +26,7 @@ LivecastMonitor::~LivecastMonitor()
 
 int LivecastMonitor::run()
 {
-  this->refresh_timer.expires_from_now(boost::posix_time::seconds(2));
+  this->refresh_timer.expires_from_now(boost::posix_time::milliseconds(this->cfg->getRefreshPeriod()));
   this->refresh_timer.async_wait(boost::bind(&LivecastMonitor::handleRefresh, this, boost::asio::placeholders::error));
   this->deadline_timer.async_wait(boost::bind(&LivecastMonitor::handleCheckTimer, this, boost::asio::placeholders::error));
   this->io_service.run();
@@ -99,13 +99,13 @@ void LivecastMonitor::handleRefresh(const boost::system::error_code& error)
 {
   if (!error)
   {
-    LogError::getInstance().sysLog(DEBUG, "refresh timer");
+    LogError::getInstance().sysLog(ERROR, "refresh timer");
     if (this->resultCallback)
     {
       LogError::getInstance().sysLog(DEBUG, "===> refresh");
-      // this->refresh(this->resultCallback);
+      this->refresh(this->resultCallback);
     }
-    this->refresh_timer.expires_from_now(boost::posix_time::seconds(2));
+    this->refresh_timer.expires_from_now(boost::posix_time::milliseconds(this->cfg->getRefreshPeriod()));
     this->refresh_timer.async_wait(boost::bind(&LivecastMonitor::handleRefresh, this, boost::asio::placeholders::error));
   }
   else

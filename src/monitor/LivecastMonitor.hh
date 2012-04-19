@@ -28,16 +28,12 @@ public:
   const boost::shared_ptr<StreamInfos> getStreamInfos(unsigned int streamId);
   const boost::shared_ptr<MonitorConfiguration> getConfiguration() const;
 
-  inline void setRefreshPeriod(boost::posix_time::milliseconds refreshPeriod) { this->refreshPeriod = refreshPeriod; }
-  inline boost::posix_time::milliseconds getRefreshPeriod() const { return this->refreshPeriod; }
-
 protected:
   void handleRefresh(const boost::system::error_code&);
   void handleCheckTimer(const boost::system::error_code&);
 
 private:
   boost::asio::io_service io_service;
-  boost::posix_time::milliseconds refreshPeriod;
   boost::asio::deadline_timer refresh_timer;
   boost::asio::deadline_timer deadline_timer;
   boost::shared_ptr<MonitorConfiguration> cfg;

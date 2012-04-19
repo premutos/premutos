@@ -89,6 +89,7 @@ public:
   inline const char * getQueryStreamList() const { return this->opts->dbQueryStreamList.c_str(); }
   inline const char * getQueryStreamProfile() const { return this->opts->dbQueryStreamProfile.c_str(); }
   inline unsigned int getConnectionTimeout() const { return this->opts->connectionTimeout; }
+  inline unsigned int getRefreshPeriod() const { return this->opts->refreshPeriod; }
 
   // Gui configuration interface
   inline const char * getMainWindowName() const { return this->opts->mainWinName.c_str(); }

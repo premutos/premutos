@@ -3,6 +3,7 @@
 
 using namespace livecast;
 using namespace livecast::gui;
+using namespace livecast::lib;
 
 static boost::shared_ptr<GuiConfiguration> instance;
 

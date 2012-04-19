@@ -15,6 +15,7 @@
 namespace po = boost::program_options;
 
 using namespace livecast;
+using namespace livecast::lib;
 
 Configuration::ProgramOption::ProgramOption()
   : confFilename("/usr/local/etc/livecast-monitor.conf"),

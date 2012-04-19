@@ -5,6 +5,7 @@
 using namespace livecast;
 using namespace livecast::monitor;
 using namespace livecast::gui;
+using namespace livecast::lib;
 
 static int wxCALLBACK ItemCmpFunc(wxIntPtr item1, wxIntPtr item2, wxIntPtr sortData)
 {

@@ -5,6 +5,7 @@
 using namespace livecast;
 using namespace livecast::gui;
 using namespace livecast::monitor;
+using namespace livecast::lib;
 
 LivecastEditPipeline::LivecastEditPipeline(wxWindow * parent, 
                                            boost::shared_ptr<livecast::monitor::LivecastMonitor> monitor, 

@@ -22,7 +22,7 @@ std::ostream& operator<<(std::ostream& os, const livecast::monitor::StreamInfos:
   case StreamInfos::STATUS_ERROR:        os << "ERROR";        break;
   case StreamInfos::STATUS_UNKNOWN:      os << "UNKNOWN";      break;
   default:
-    LogError::getInstance().sysLog(CRITICAL, "bad status %d", status);
+    livecast::lib::LogError::getInstance().sysLog(CRITICAL, "bad status %d", status);
     assert(false);
   }
   return os;

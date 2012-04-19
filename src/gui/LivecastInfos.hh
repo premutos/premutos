@@ -4,6 +4,7 @@
 #include <wx/wx.h>
 #include <wx/aui/auibook.h>
 #include <wx/listctrl.h>
+#include <wx/treelistctrl.hh>
 
 #include "../monitor/ResultCallbackIntf.hh"
 #include "../monitor/StreamInfos.hh"
@@ -24,15 +25,16 @@ public:
 
 protected:
   void onTabMiddleUp(wxAuiNotebookEvent& event);
+  void onProfilesListDblClicked(wxListEvent& event);
 
 private:
   wxAuiNotebook * noteBook;
   wxPanel * infos;
   LivecastListCtrl * profiles;
-  LivecastListCtrl * servers;
+  wxTreeListCtrl * servers;
   LivecastStatus * primaryStatusSchema;
   LivecastStatus * backupStatusSchema;
-
+  
   wxStaticText * idValue;
   wxStaticText * modeValue;
   wxStaticText * srcIpValue;

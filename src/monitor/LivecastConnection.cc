@@ -8,6 +8,7 @@
 
 using namespace livecast;
 using namespace livecast::monitor;
+using namespace livecast::lib;
 
 LivecastConnection::LivecastConnection(boost::asio::io_service& io_service,
                                        const std::string& host, 
@@ -189,7 +190,6 @@ void LivecastConnection::handleConnect(const boost::system::error_code& err)
   {
     LogError::getInstance().sysLog(WARNING, "cannot get status information for streamId %d on %s:%d", this->streamId, this->host.c_str(), this->port);
   } 
-
 }
 
 void LivecastConnection::handleTimeout(const boost::system::error_code& error)
@@ -205,7 +205,7 @@ void LivecastConnection::checkError(const boost::system::error_code& error) cons
 {
   if (error != 0)
   {
-    throw new LivecastConnectionException;
+    throw LivecastConnectionException();
   }
 }
 

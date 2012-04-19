@@ -51,7 +51,7 @@ bool Livecast::OnInit()
     return EXIT_FAILURE;
   }
 
-  LogError::getInstance().sysLog(DEBUG, "%s", this->cfg->getOpts()->dbAccessFilename.c_str());
+  livecast::lib::LogError::getInstance().sysLog(DEBUG, "%s", this->cfg->getOpts()->dbAccessFilename.c_str());
   std::ifstream f(this->cfg->getOpts()->dbAccessFilename.c_str());
   cfg->loadAccess(f);
   f.close();

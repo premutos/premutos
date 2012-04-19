@@ -5,6 +5,7 @@
 
 using namespace livecast;
 using namespace livecast::gui;
+using namespace livecast::lib;
 
 ResultCallback::ResultCallback(LivecastResult * const streams, LivecastServers * const servers) 
   : streams(streams),

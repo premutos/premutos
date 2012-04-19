@@ -5,6 +5,7 @@
 using namespace livecast;
 using namespace livecast::monitor;
 using namespace livecast::gui;
+using namespace livecast::lib;
 
 LivecastControl::LivecastControl(LivecastGui * livecastGui)
   : wxPanel(livecastGui, 

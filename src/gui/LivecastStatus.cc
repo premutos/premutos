@@ -10,6 +10,7 @@
 using namespace livecast;
 using namespace livecast::monitor;
 using namespace livecast::gui;
+using namespace livecast::lib;
 
 LivecastStatus::LivecastStatus(wxWindow * parent, boost::shared_ptr<const StreamInfos> streamInfos, bool noTree, bool primary)
   : wxPanel(parent, wxID_ANY),
@@ -85,6 +86,12 @@ void LivecastStatus::onCheckStream(wxCommandEvent& ev)
 
   // schema
   const boost::property_tree::ptree& statusInfos = this->streamInfos->getResultTree();
+
+//   std::cout << "====" << std::endl;
+//   boost::property_tree::write_xml(std::cout, statusInfos);
+//   std::cout << std::endl;
+//   std::cout << "====" << std::endl;
+
   unsigned int id = 0;
   std::string row = this->primary ? "status.primary" : "status.backup";
   for (boost::property_tree::ptree::const_iterator it = statusInfos.get_child(row.c_str()).begin(); it != statusInfos.get_child(row.c_str()).end(); ++it)

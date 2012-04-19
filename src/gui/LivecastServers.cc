@@ -40,7 +40,7 @@ protected:
     }
   void onSort(wxListEvent& ev)
     {
-      LogError::getInstance().sysLog(ERROR, "click on col %d", ev.GetColumn());
+      livecast::lib::LogError::getInstance().sysLog(ERROR, "click on col %d", ev.GetColumn());
       this->SortChildren(this->GetRootItem(), ev.GetColumn(), this->sortOrder);
       this->sortOrder = !this->sortOrder;
     }
@@ -54,6 +54,7 @@ private:
 using namespace livecast;
 using namespace livecast::gui;
 using namespace livecast::monitor;
+using namespace livecast::lib;
 
 enum popup_menu_t
 {
@@ -87,10 +88,6 @@ LivecastServers::LivecastServers(wxWindow * parent, boost::shared_ptr<livecast::
   // bind servers event
   this->servers->Bind(wxEVT_COMMAND_LIST_ITEM_ACTIVATED, &LivecastServers::onServersListDblClicked, this, wxID_ANY);
   this->Connect(serversListEvent, wxCommandEventHandler(LivecastServers::onServersListUpdate));
-
-  // bind status event
-//   this->statusList->Bind(wxEVT_COMMAND_LIST_ITEM_ACTIVATED, &LivecastServers::onStatusDblClicked, this, wxID_ANY);
-//   this->statusList->Bind(wxEVT_COMMAND_LIST_ITEM_RIGHT_CLICK, &LivecastServers::onStatusRightClicked, this, wxID_ANY);
 
   // bind results event
   this->results->Bind(wxEVT_COMMAND_AUINOTEBOOK_TAB_MIDDLE_UP, &LivecastServers::onTabMiddleUp, this, wxID_ANY);
@@ -178,6 +175,7 @@ void LivecastServers::onTabMiddleUp(wxAuiNotebookEvent& event)
 
 void LivecastServers::fillStatus(wxTreeListCtrl * statusTree, boost::property_tree::ptree& result) const
 {
+
 //   std::cout << std::endl 
 //             << "============================================"
 //             << std::endl;
@@ -193,9 +191,6 @@ void LivecastServers::fillStatus(wxTreeListCtrl * statusTree, boost::property_tr
   statusTree->AddColumn ("message");
 
   wxTreeItemId root = statusTree->AddRoot ("");
-  statusTree->SetItemText(root, 1, "");
-  statusTree->SetItemText(root, 2, "");
-  statusTree->SetItemFont(root, wxFont(1, wxFONTFAMILY_SWISS, wxFONTSTYLE_ITALIC, wxFONTWEIGHT_BOLD));
 
   unsigned int n = 0;
   wxTreeItemId parent;

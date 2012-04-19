@@ -7,6 +7,7 @@
 using namespace livecast;
 using namespace gui;
 using namespace monitor;
+using namespace livecast::lib;
 
 LivecastInfos::LivecastInfos(wxWindow * parent)
   : wxPanel(parent, wxID_ANY),
@@ -120,18 +121,20 @@ LivecastInfos::LivecastInfos(wxWindow * parent)
     this->profiles->InsertColumn(index++, "Deinterlace", wxLIST_FORMAT_LEFT);
     this->profiles->InsertColumn(index++, "Framerate", wxLIST_FORMAT_LEFT);
     this->profiles->InsertColumn(index++, "Protocols", wxLIST_FORMAT_LEFT);
-    this->noteBook->InsertPage(1, this->profiles, "profiles", true);
+    this->noteBook->InsertPage(0, this->profiles, "profiles", true);
+    this->profiles->Bind(wxEVT_COMMAND_LIST_ITEM_ACTIVATED, &LivecastInfos::onProfilesListDblClicked, this, wxID_ANY);
 
     // servers
-    this->servers = new LivecastListCtrl(this->noteBook);
-    index = 0;
-    this->servers->InsertColumn(index++, "row", wxLIST_FORMAT_LEFT);
-    this->servers->InsertColumn(index++, "type", wxLIST_FORMAT_LEFT);
-    this->servers->InsertColumn(index++, "hostname", wxLIST_FORMAT_LEFT);
-    this->servers->InsertColumn(index++, "ip", wxLIST_FORMAT_LEFT);
-    this->servers->InsertColumn(index++, "port", wxLIST_FORMAT_LEFT);
-    this->servers->InsertColumn(index++, "status", wxLIST_FORMAT_LEFT);
-    this->noteBook->InsertPage(2, this->servers, "servers", false);
+    this->servers = new wxTreeListCtrl(this->noteBook, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_DEFAULT_STYLE | wxTR_HIDE_ROOT | wxTR_ROW_LINES);
+    this->servers->AddColumn("row");
+    this->servers->AddColumn("type");
+    this->servers->AddColumn("hostname");
+    this->servers->AddColumn("ip");
+    this->servers->AddColumn("port");
+    this->servers->AddColumn("status");
+    this->servers->AddColumn("details");
+    this->servers->AddRoot("");
+    this->noteBook->InsertPage(1, this->servers, "servers", false);
 
     // status schema
     // to be added in setInfos method
@@ -176,7 +179,7 @@ std::list<boost::shared_ptr<ResultCallbackIntf> > LivecastInfos::setInfos(boost:
     item.SetId(n);
     unsigned int index = this->profiles->InsertItem(item);
     assert(index == n);
-    for (unsigned int i = 0; i < StreamInfos::PROFILE_LAST; i++)
+    for (unsigned int i = 0; i < StreamInfos::PROFILE_PRIMARY_CDN_URL; i++)
     {
       this->profiles->SetItem(index, i, (*it)[i]);
     }
@@ -186,7 +189,15 @@ std::list<boost::shared_ptr<ResultCallbackIntf> > LivecastInfos::setInfos(boost:
 
   // servers
   n = 0;
-  this->servers->DeleteAllItems();
+  wxTreeItemId root = this->servers->GetRootItem();
+//   wxTreeItemIdValue cookie;    
+//   for (wxTreeItemId item = this->servers->GetFirstChild(root, cookie);
+//        item.IsOk();
+//        item = this->servers->GetNextChild(root, cookie))
+//   {
+//     this->servers->DeleteChildren(item);
+//   }
+  this->servers->DeleteChildren(root);
   const StreamInfos::servers_t& serv = streamInfos->getServers();
   for (unsigned int r = 0; r < 2; r++)
   {
@@ -200,39 +211,79 @@ std::list<boost::shared_ptr<ResultCallbackIntf> > LivecastInfos::setInfos(boost:
                              ((*it).type == StreamInfos::server_t::STREAMER_RTMP) ? "streamer rtmp" :
                              ((*it).type == StreamInfos::server_t::STREAMER_HLS) ? "streamer hls" :
                              "unknown");
-        wxListItem item;
-        item.SetId(n);
-        unsigned int index = this->servers->InsertItem(item);
+
+        wxTreeItemId item = this->servers->AppendItem (root, row);
 
         std::ostringstream portSS;
         std::ostringstream statusSS;
         portSS << (*it).port;
         statusSS << (*it).status;
-        this->servers->SetItem(index, 0, row);
-        this->servers->SetItem(index, 1, type);
-        this->servers->SetItem(index, 2, (*it).host.c_str());
-        this->servers->SetItem(index, 3, "n/a");
-        this->servers->SetItem(index, 4, portSS.str().c_str());
-        this->servers->SetItem(index, 5, statusSS.str().c_str());
-        this->servers->SetItemTextColour(index, (*it).status);
-        this->servers->SetItemBackgroundColour(index, wxColour(wxColour(((index % 2) == 0) ? lightYellow : lightBlue)));
+
+        unsigned int col = 1;
+        this->servers->SetItemText(item, col++, type);
+        this->servers->SetItemText(item, col++, (*it).host.c_str());
+        this->servers->SetItemText(item, col++, "n/a");
+        this->servers->SetItemText(item, col++, portSS.str().c_str());
+        this->servers->SetItemText(item, col++, statusSS.str().c_str());
+        this->servers->SetItemText(item, col++, "n/a");
+
+        switch ((*it).status)
+        {  
+        case StreamInfos::STATUS_WAITING:      this->servers->SetItemTextColour(item, wxColour(wxColour(grey)));    break;
+        case StreamInfos::STATUS_INITIALIZING: this->servers->SetItemTextColour(item, wxColour(wxColour(*wxBLUE))); break;
+        case StreamInfos::STATUS_RUNNING:      this->servers->SetItemTextColour(item, wxColour(wxColour(green)));   break;
+        case StreamInfos::STATUS_ERROR:        this->servers->SetItemTextColour(item, wxColour(wxColour(*wxRED)));  break;
+        case StreamInfos::STATUS_UNKNOWN:      this->servers->SetItemTextColour(item, wxColour(wxColour(orange)));  break;
+        }  
+
+        this->servers->SetItemBackgroundColour(item, wxColour(wxColour(((n % 2) == 0) ? lightYellow : lightBlue)));
+
+        // add details
+        unsigned int nDetails = n + 1;
+        for (std::list<boost::tuple<StreamInfos::status_t, std::string, std::string> >::const_iterator itDetails = (*it).statusDetails.begin(); itDetails != (*it).statusDetails.end(); ++itDetails)
+        {
+          wxTreeItemId itemDetails = this->servers->AppendItem (item, row);
+          col = 1;
+          this->servers->SetItemText(itemDetails, col++, type);
+          this->servers->SetItemText(itemDetails, col++, (*it).host.c_str());
+          this->servers->SetItemText(itemDetails, col++, "n/a");
+          this->servers->SetItemText(itemDetails, col++, portSS.str().c_str());
+          this->servers->SetItemText(itemDetails, col++, (*itDetails).get<1>().c_str());
+          this->servers->SetItemText(itemDetails, col++, (*itDetails).get<2>().c_str());
+          
+          switch ((*itDetails).get<0>())
+          {  
+          case StreamInfos::STATUS_WAITING:      this->servers->SetItemTextColour(itemDetails, wxColour(wxColour(grey)));    break;
+          case StreamInfos::STATUS_INITIALIZING: this->servers->SetItemTextColour(itemDetails, wxColour(wxColour(*wxBLUE))); break;
+          case StreamInfos::STATUS_RUNNING:      this->servers->SetItemTextColour(itemDetails, wxColour(wxColour(green)));   break;
+          case StreamInfos::STATUS_ERROR:        this->servers->SetItemTextColour(itemDetails, wxColour(wxColour(*wxRED)));  break;
+          case StreamInfos::STATUS_UNKNOWN:      this->servers->SetItemTextColour(itemDetails, wxColour(wxColour(orange)));  break;
+          }  
+          
+          this->servers->SetItemBackgroundColour(itemDetails, wxColour(wxColour(((nDetails % 2) == 0) ? lightYellow : lightBlue)));
+          nDetails++;
+        }
+
         n++;
       }
     }
   }
 
-  for (size_t i = 2; i < this->noteBook->GetPageCount(); i++)
+  // clean schema
+  for (size_t i = 2; i <= this->noteBook->GetPageCount() + 1; i++)
   {
+    LogError::getInstance().sysLog(DEBUG, "remove tab %d", i);
     this->noteBook->RemovePage(i);
+    this->noteBook->DeletePage(i);
   }
 
   // primary status schema
   this->primaryStatusSchema = new LivecastStatus(this->noteBook, streamInfos, true);
-  this->noteBook->InsertPage(3, this->primaryStatusSchema, "primary schema", true);
+  this->noteBook->InsertPage(2, this->primaryStatusSchema, "primary schema", true);
 
   // backup status schema
   this->backupStatusSchema = new LivecastStatus(this->noteBook, streamInfos, true, false);
-  this->noteBook->InsertPage(4, this->backupStatusSchema, "backup schema", true);
+  this->noteBook->InsertPage(3, this->backupStatusSchema, "backup schema", true);
 
   // set selection on servers list
   this->noteBook->SetSelection((this->currentSelectionPage < this->noteBook->GetPageCount()) ? this->currentSelectionPage : 0);
@@ -259,4 +310,141 @@ void LivecastInfos::onTabMiddleUp(wxAuiNotebookEvent& event)
   {
     this->noteBook->DeletePage(event.GetSelection());
   }
+}
+
+void LivecastInfos::onProfilesListDblClicked(wxListEvent& event)
+{
+  LogError::getInstance().sysLog(DEBUG, "click on profiles list item %d", event.GetIndex());
+
+  StreamInfos::profiles_t::const_iterator it = streamInfos->getProfiles().begin();
+  std::advance(it, event.GetIndex());
+
+  LogError::getInstance().sysLog(DEBUG, "id '%s'", (*it)[StreamInfos::PROFILE_ID].c_str());
+  LogError::getInstance().sysLog(DEBUG, "width '%s'", (*it)[StreamInfos::PROFILE_WIDTH].c_str());
+  LogError::getInstance().sysLog(DEBUG, "height '%s'", (*it)[StreamInfos::PROFILE_HEIGHT].c_str());
+  LogError::getInstance().sysLog(DEBUG, "video bitrate '%s'", (*it)[StreamInfos::PROFILE_VIDEOBITRATE].c_str());
+  LogError::getInstance().sysLog(DEBUG, "audio bitrate '%s'", (*it)[StreamInfos::PROFILE_AUDIOBITRATE].c_str());
+  LogError::getInstance().sysLog(DEBUG, "deinterlace '%s'", (*it)[StreamInfos::PROFILE_DEINTERLACE].c_str());
+  LogError::getInstance().sysLog(DEBUG, "framerate '%s'", (*it)[StreamInfos::PROFILE_FRAMERATE].c_str());
+  LogError::getInstance().sysLog(DEBUG, "protocols '%s'", (*it)[StreamInfos::PROFILE_PROTOCOLS].c_str());
+  LogError::getInstance().sysLog(DEBUG, "primary cdn url '%s'", (*it)[StreamInfos::PROFILE_PRIMARY_CDN_URL].c_str());
+  LogError::getInstance().sysLog(DEBUG, "backup cdn url '%s'", (*it)[StreamInfos::PROFILE_BACKUP_CDN_URL].c_str());
+  LogError::getInstance().sysLog(DEBUG, "playback url '%s'", (*it)[StreamInfos::PROFILE_PLAYBACK_URL].c_str());
+  LogError::getInstance().sysLog(DEBUG, "cdn username '%s'", (*it)[StreamInfos::PROFILE_CDN_USERNAME].c_str());
+  LogError::getInstance().sysLog(DEBUG, "cdn password '%s'", (*it)[StreamInfos::PROFILE_CDN_PASSWORD].c_str());
+  LogError::getInstance().sysLog(DEBUG, "cdn livename '%s'", (*it)[StreamInfos::PROFILE_CDN_LIVENAME].c_str());
+  
+  wxPanel * profileDetails = new wxPanel(this->noteBook);
+
+  wxPanel * labelPanel = new wxPanel(profileDetails, wxID_ANY);
+  wxPanel * valuePanel = new wxPanel(profileDetails, wxID_ANY);
+
+  wxStaticText * id = new wxStaticText(labelPanel, wxID_ANY, wxT("id:"));
+  wxStaticText * width = new wxStaticText(labelPanel, wxID_ANY, wxT("width:"));
+  wxStaticText * height = new wxStaticText(labelPanel, wxID_ANY, wxT("height:"));
+  wxStaticText * videobitrate = new wxStaticText(labelPanel, wxID_ANY, wxT("videobitrate:"));
+  wxStaticText * audiobitrate = new wxStaticText(labelPanel, wxID_ANY, wxT("audiobitrate:"));
+  wxStaticText * deinterlace = new wxStaticText(labelPanel, wxID_ANY, wxT("deinterlace:"));
+  wxStaticText * framerate = new wxStaticText(labelPanel, wxID_ANY, wxT("framerate:"));
+  wxStaticText * protocols = new wxStaticText(labelPanel, wxID_ANY, wxT("protocols:"));
+  wxStaticText * primary_cdn_url = new wxStaticText(labelPanel, wxID_ANY, wxT("primary_cdn_url:"));
+  wxStaticText * backup_cdn_url = new wxStaticText(labelPanel, wxID_ANY, wxT("backup_cdn_url:"));
+  wxStaticText * playback_url = new wxStaticText(labelPanel, wxID_ANY, wxT("playback_url:"));
+  wxStaticText * cdn_username = new wxStaticText(labelPanel, wxID_ANY, wxT("cdn_username:"));
+  wxStaticText * cdn_password = new wxStaticText(labelPanel, wxID_ANY, wxT("cdn_password:"));
+  wxStaticText * cdn_livename = new wxStaticText(labelPanel, wxID_ANY, wxT("cdn_livename:"));
+
+  id->SetFont(this->GetFont().Underlined());
+  width->SetFont(this->GetFont().Underlined());
+  height->SetFont(this->GetFont().Underlined());
+  videobitrate->SetFont(this->GetFont().Underlined());
+  audiobitrate->SetFont(this->GetFont().Underlined());
+  deinterlace->SetFont(this->GetFont().Underlined());
+  framerate->SetFont(this->GetFont().Underlined());
+  protocols->SetFont(this->GetFont().Underlined());
+  primary_cdn_url->SetFont(this->GetFont().Underlined());
+  backup_cdn_url->SetFont(this->GetFont().Underlined());
+  playback_url->SetFont(this->GetFont().Underlined());
+  cdn_username->SetFont(this->GetFont().Underlined());
+  cdn_password->SetFont(this->GetFont().Underlined());
+  cdn_livename->SetFont(this->GetFont().Underlined());
+
+  std::ostringstream defaultPlaybackUrl;
+  defaultPlaybackUrl << "rtmp://" << (*it)[StreamInfos::PROFILE_ID] << "p.livecast.kewego.com/media/stream=" << this->streamInfos->getId() << "_" << (*it)[StreamInfos::PROFILE_ID];
+
+  wxStaticText * idValue = new wxStaticText(valuePanel, wxID_ANY, (*it)[StreamInfos::PROFILE_ID]);
+  wxStaticText * widthValue = new wxStaticText(valuePanel, wxID_ANY, (*it)[StreamInfos::PROFILE_WIDTH]);
+  wxStaticText * heightValue = new wxStaticText(valuePanel, wxID_ANY, (*it)[StreamInfos::PROFILE_HEIGHT]);
+  wxStaticText * videobitrateValue = new wxStaticText(valuePanel, wxID_ANY, (*it)[StreamInfos::PROFILE_VIDEOBITRATE]);
+  wxStaticText * audiobitrateValue = new wxStaticText(valuePanel, wxID_ANY, (*it)[StreamInfos::PROFILE_AUDIOBITRATE]);
+  wxStaticText * deinterlaceValue = new wxStaticText(valuePanel, wxID_ANY, (*it)[StreamInfos::PROFILE_DEINTERLACE]);
+  wxStaticText * framerateValue = new wxStaticText(valuePanel, wxID_ANY, (*it)[StreamInfos::PROFILE_FRAMERATE]);
+  wxStaticText * protocolsValue = new wxStaticText(valuePanel, wxID_ANY, (*it)[StreamInfos::PROFILE_PROTOCOLS]);
+  wxStaticText * primary_cdn_urlValue = new wxStaticText(valuePanel, wxID_ANY, ((*it)[StreamInfos::PROFILE_PRIMARY_CDN_URL] != "") ? (*it)[StreamInfos::PROFILE_PRIMARY_CDN_URL] : "n/a");
+  wxStaticText * backup_cdn_urlValue = new wxStaticText(valuePanel, wxID_ANY, ((*it)[StreamInfos::PROFILE_BACKUP_CDN_URL] != "") ? (*it)[StreamInfos::PROFILE_BACKUP_CDN_URL] : "n/a");
+  wxStaticText * playback_urlValue = new wxStaticText(valuePanel, wxID_ANY, (((*it)[StreamInfos::PROFILE_PLAYBACK_URL]) != "") ? (*it)[StreamInfos::PROFILE_PLAYBACK_URL] : defaultPlaybackUrl.str());
+  wxStaticText * cdn_usernameValue = new wxStaticText(valuePanel, wxID_ANY, ((*it)[StreamInfos::PROFILE_CDN_USERNAME] != "") ? (*it)[StreamInfos::PROFILE_CDN_USERNAME] : "n/a");
+  wxStaticText * cdn_passwordValue = new wxStaticText(valuePanel, wxID_ANY, ((*it)[StreamInfos::PROFILE_CDN_PASSWORD] != "") ? (*it)[StreamInfos::PROFILE_CDN_PASSWORD] : "n/a");
+  wxStaticText * cdn_livenameValue = new wxStaticText(valuePanel, wxID_ANY, ((*it)[StreamInfos::PROFILE_CDN_LIVENAME] != "") ? (*it)[StreamInfos::PROFILE_CDN_LIVENAME] : "n/a");
+
+  idValue->SetFont(this->GetFont().Bold());
+  widthValue->SetFont(this->GetFont().Bold());
+  heightValue->SetFont(this->GetFont().Bold());
+  videobitrateValue->SetFont(this->GetFont().Bold());
+  audiobitrateValue->SetFont(this->GetFont().Bold());
+  deinterlaceValue->SetFont(this->GetFont().Bold());
+  framerateValue->SetFont(this->GetFont().Bold());
+  protocolsValue->SetFont(this->GetFont().Bold());
+  primary_cdn_urlValue->SetFont(this->GetFont().Bold());
+  backup_cdn_urlValue->SetFont(this->GetFont().Bold());
+  playback_urlValue->SetFont(this->GetFont().Bold());
+  cdn_usernameValue->SetFont(this->GetFont().Bold());
+  cdn_passwordValue->SetFont(this->GetFont().Bold());
+  cdn_livenameValue->SetFont(this->GetFont().Bold());
+
+  wxBoxSizer * sizer = new wxBoxSizer(wxHORIZONTAL);
+  wxBoxSizer * sizerLabel = new wxBoxSizer(wxVERTICAL);
+  wxBoxSizer * sizerValue = new wxBoxSizer(wxVERTICAL);
+
+  sizerLabel->Add(id, 0, wxALL, 2);
+  sizerLabel->Add(width, 0, wxALL, 2);
+  sizerLabel->Add(height, 0, wxALL, 2);
+  sizerLabel->Add(videobitrate, 0, wxALL, 2);
+  sizerLabel->Add(audiobitrate, 0, wxALL, 2);
+  sizerLabel->Add(deinterlace, 0, wxALL, 2);
+  sizerLabel->Add(framerate, 0, wxALL, 2);
+  sizerLabel->Add(protocols, 0, wxALL, 2);
+  sizerLabel->Add(primary_cdn_url, 0, wxALL, 2);
+  sizerLabel->Add(backup_cdn_url, 0, wxALL, 2);
+  sizerLabel->Add(playback_url, 0, wxALL, 2);
+  sizerLabel->Add(cdn_username, 0, wxALL, 2);
+  sizerLabel->Add(cdn_password, 0, wxALL, 2);
+  sizerLabel->Add(cdn_livename, 0, wxALL, 2);
+  
+  sizerValue->Add(idValue, 0, wxALL, 2);
+  sizerValue->Add(widthValue, 0, wxALL, 2);
+  sizerValue->Add(heightValue, 0, wxALL, 2);
+  sizerValue->Add(videobitrateValue, 0, wxALL, 2);
+  sizerValue->Add(audiobitrateValue, 0, wxALL, 2);
+  sizerValue->Add(deinterlaceValue, 0, wxALL, 2);
+  sizerValue->Add(framerateValue, 0, wxALL, 2);
+  sizerValue->Add(protocolsValue, 0, wxALL, 2);
+  sizerValue->Add(primary_cdn_urlValue, 0, wxALL, 2);
+  sizerValue->Add(backup_cdn_urlValue, 0, wxALL, 2);
+  sizerValue->Add(playback_urlValue, 0, wxALL, 2);
+  sizerValue->Add(cdn_usernameValue, 0, wxALL, 2);
+  sizerValue->Add(cdn_passwordValue, 0, wxALL, 2);
+  sizerValue->Add(cdn_livenameValue, 0, wxALL, 2);
+
+  labelPanel->SetSizer(sizerLabel);
+  valuePanel->SetSizer(sizerValue);
+
+  sizer->Add(labelPanel, 1);
+  sizer->Add(valuePanel, 1);
+
+  profileDetails->SetSizer(sizer);
+
+  std::ostringstream title;
+  title << "profile " << (*it)[StreamInfos::PROFILE_ID] << " details";
+  this->noteBook->InsertPage(this->noteBook->GetPageCount(), profileDetails, title.str(), true);
 }

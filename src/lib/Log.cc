@@ -8,7 +8,13 @@
 #include <unistd.h>
 #include <pthread.h>
 
-#define BRIGHT 1
+#define RESET		           0
+#define BRIGHT 		         1
+#define DIM		             2
+#define UNDERLINE 	       3
+#define BLINK		           4
+#define REVERSE		         7
+#define HIDDEN		         8
 
 // Foreground colors
 #define FG_BLACK           30    
@@ -30,7 +36,11 @@
 #define BG_CYAN            46    
 #define BG_WHITE           47    
 
-LogError * systemLog = 0;
+namespace {
+livecast::lib::LogError * systemLog = 0;
+}
+
+using namespace livecast::lib;
 
 LogError& LogError::getInstance()
 {
@@ -57,7 +67,6 @@ LogError& LogError::getInstance(const char * ident, int mode, bool force)
 LogError::LogError()
   : level(-1), // no level,
     localFile(0),
-    logOpt(0),
     mode(STDOUT),
     colorLog(false),
     lockMode(false),
@@ -71,7 +80,6 @@ LogError::LogError()
 LogError::LogError(const char *_ident, int _mode) 
   : level(-1),
     localFile(0),
-		logOpt(0),
     mode(_mode),
     colorLog(false),
     lockMode(false),
@@ -100,12 +108,6 @@ LogError::~LogError()
 		this->closeFile();
 	::pthread_rwlock_destroy(&locksyslog);
 	::pthread_rwlock_destroy(&lockclose);
-}
-
-void LogError::initMutexes(void)
-{
-	pthread_rwlock_init(&locksyslog, NULL);
-	pthread_rwlock_init(&lockclose, NULL);
 }
 
 void LogError::sysLog(const char *identity, int facility, const char *format, ...) 
@@ -231,22 +233,22 @@ void LogError::printWithColor(const char * buf, int facility)
     ::fprintf(stderr, "%c[%d;%d;%dm%s\033[0m\n", 0x1B, BRIGHT, FG_YELLOW, BG_RED, buf);
     break;
   case LOG_ERR:
-    ::fprintf(stderr, "%c[%d;%dm%s\033[0m\n", 0x1B, BRIGHT, FG_RED, buf);
+    ::fprintf(stderr, "%c[%d;%dm%s\033[0m\n", 0x1B, RESET, FG_RED, buf);
     break;
   case LOG_WARNING:
-    ::fprintf(stderr, "%c[%d;%dm%s\033[0m\n", 0x1B, BRIGHT, FG_YELLOW, buf);
+    ::fprintf(stderr, "%c[%d;%dm%s\033[0m\n", 0x1B, RESET, FG_YELLOW, buf);
     break;
   case LOG_NOTICE:
-    ::fprintf(stderr, "%c[%d;%dm%s\033[0m\n", 0x1B, BRIGHT, FG_GREEN, buf);
+    ::fprintf(stderr, "%c[%d;%dm%s\033[0m\n", 0x1B, RESET, FG_GREEN, buf);
     break;
   case LOG_INFO:
-    ::fprintf(stderr, "%c[%d;%dm%s\033[0m\n", 0x1B, BRIGHT, FG_CYAN, buf);
+    ::fprintf(stderr, "%c[%d;%dm%s\033[0m\n", 0x1B, RESET, FG_BLUE, buf);
     break;
   case LOG_DEBUG:
-    ::fprintf(stderr, "%c[%d;%dm%s\033[0m\n", 0x1B, BRIGHT, FG_MAGENTA, buf);
+    ::fprintf(stderr, "%c[%d;%dm%s\033[0m\n", 0x1B, RESET, FG_MAGENTA, buf);
     break;
   default:
-    ::fprintf(stderr, "%c[%d;%dm%s\033[0m\n", 0x1B, BRIGHT, FG_BLACK, buf);
+    ::fprintf(stderr, "%c[%d;%dm%s\033[0m\n", 0x1B, RESET, FG_BLACK, buf);
   }
 }
 
@@ -262,21 +264,8 @@ void LogError::closeFile(void)
 	::pthread_rwlock_unlock(&this->lockclose);
 }
 
-namespace chainsaw
+void LogError::initMutexes(void)
 {
-
-#ifdef HAVE_LIBUTIL_H
-#include <libutil.h>
-void hexdump(void * data, unsigned int len)
-{
-  hexdump(data, len, NULL, 0);
-  fflush(stdout);
-}
-#else
-void hexdump(void*, unsigned int)
-{
-  // TODO
-}
-#endif
-
+	pthread_rwlock_init(&locksyslog, NULL);
+	pthread_rwlock_init(&lockclose, NULL);
 }

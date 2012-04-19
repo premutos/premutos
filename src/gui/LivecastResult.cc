@@ -37,6 +37,7 @@ enum column_id_t
 using namespace livecast;
 using namespace livecast::monitor;
 using namespace livecast::gui;
+using namespace livecast::lib;
 
 class LivecastListCtrlVirtual : public LivecastListCtrl
 {

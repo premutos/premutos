@@ -7,6 +7,7 @@
 using namespace livecast;
 using namespace livecast::monitor;
 using namespace livecast::gui;
+using namespace livecast::lib;
 
 LivecastTaskBarIcon::LivecastTaskBarIcon(LivecastGui * const livecastGui)
   : livecastGui(livecastGui)

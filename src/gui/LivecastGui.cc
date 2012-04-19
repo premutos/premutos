@@ -14,6 +14,7 @@
 using namespace livecast;
 using namespace livecast::monitor;
 using namespace livecast::gui;
+using namespace livecast::lib;
 
 enum livecast_menu_t
 {

@@ -10,6 +10,7 @@
 
 using namespace livecast;
 using namespace livecast::monitor;
+using namespace livecast::lib;
 
 enum query_list_rows_t
 {
@@ -336,7 +337,7 @@ int MonitorConfiguration::loadStreamList()
       sdPort = boost::lexical_cast<uint16_t>(row[QLR_STREAMDUP_PORT]);
       mbPort = boost::lexical_cast<uint16_t>(row[QLR_MASTERBOX_PORT]);
       StreamInfos::server_t streamdup(row[QLR_STREAMDUP_HOSTNAME], 1111, sdProtocol.c_str(), sdPort, StreamInfos::server_t::STREAM_DUP, false);
-      StreamInfos::server_t masterbox(row[QLR_MASTERBOX_HOSTNAME], 2222, "tcp", mbPort, StreamInfos::server_t::MASTER_BOX, row[QLR_MASTERBOX_LEAF]);
+      StreamInfos::server_t masterbox(row[QLR_MASTERBOX_HOSTNAME], 2222, "tcp", mbPort, StreamInfos::server_t::MASTER_BOX, row[QLR_MASTERBOX_LEAF][0] == '0');
 
       it->second->addServer(streamdup, row[QLR_ROW][0] == '0');
       it->second->addServer(masterbox, row[QLR_ROW][0] == '0');

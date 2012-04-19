@@ -40,6 +40,12 @@ public:
     PROFILE_DEINTERLACE,
     PROFILE_FRAMERATE,
     PROFILE_PROTOCOLS,
+    PROFILE_PRIMARY_CDN_URL,
+    PROFILE_BACKUP_CDN_URL,
+    PROFILE_PLAYBACK_URL,
+    PROFILE_CDN_USERNAME,
+    PROFILE_CDN_PASSWORD,
+    PROFILE_CDN_LIVENAME,
     PROFILE_LAST,
   };
   typedef boost::array<std::string, PROFILE_LAST> profile_infos_t;
@@ -78,6 +84,7 @@ public:
     const uint16_t port;
     const type_t type;
     status_t status;
+    std::list<boost::tuple<status_t, std::string, std::string> > statusDetails;
     bool leaf;
     server_t(const char * host,
              const uint16_t adminPort,
