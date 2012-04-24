@@ -2,9 +2,21 @@
 #include "Util.hh"
 #include "../lib/Log.hh"
 #include <algorithm>
+#include <wx/tooltip.h>
 
 using namespace livecast::gui;
 using namespace livecast::lib;
+
+bool StatusSchema::server_t::contained(wxPoint pt, float wRatio, float hRatio) const
+{
+  return ((pt.x > (this->rect.x * wRatio)) &&
+          (pt.y > (this->rect.y * hRatio)) &&
+          (pt.x < ((this->rect.x + this->rect.width) * wRatio)) &&
+          (pt.y < ((this->rect.y + this->rect.height) * hRatio)));
+}
+
+//
+//
 
 StatusSchema::StatusSchema(wxWindow * parent)
   : wxControl(parent, wxID_ANY),
@@ -18,6 +30,7 @@ StatusSchema::StatusSchema(wxWindow * parent)
   this->Bind(wxEVT_RIGHT_DOWN, &StatusSchema::onOpenPopupMenu, this, wxID_ANY);
   this->Bind(wxEVT_LEFT_DOWN, &StatusSchema::onLeftDown, this, wxID_ANY);
   this->Bind(wxEVT_LEFT_UP, &StatusSchema::onLeftUp, this, wxID_ANY);
+  this->Bind(wxEVT_MOTION, &StatusSchema::onMouseMotion, this, wxID_ANY);
 }
 
 void StatusSchema::addServer(boost::shared_ptr<StatusSchema::server_t> s)
@@ -198,7 +211,7 @@ void StatusSchema::onOpenPopupMenu(wxMouseEvent& WXUNUSED(event))
 //   LogError::getInstance().sysLog(ERROR, "");
 }
 
-void StatusSchema::onLeftDown(wxMouseEvent& WXUNUSED(event))
+void StatusSchema::onLeftDown(wxMouseEvent& event)
 {
 //   LogError::getInstance().sysLog(ERROR, "");
 }
@@ -206,6 +219,24 @@ void StatusSchema::onLeftDown(wxMouseEvent& WXUNUSED(event))
 void StatusSchema::onLeftUp(wxMouseEvent& WXUNUSED(event))
 {
 //   LogError::getInstance().sysLog(ERROR, "");
+}
+
+void StatusSchema::onMouseMotion(wxMouseEvent& event)
+{
+  wxPaintDC dc(this);
+  wxPoint pt = event.GetLogicalPosition(dc);
+  for (servers_t::const_iterator it = this->servers.begin(); it != this->servers.end(); ++it)
+  {
+    if ((*it)->contained(pt, this->wRatio, this->hRatio))
+    {
+      LogError::getInstance().sysLog(DEBUG, "click on %s", (*it)->hostname.c_str());
+      wxToolTip::Enable(true);
+      this->SetToolTip((*it)->statusDetail);
+      return;
+    }
+  }
+  LogError::getInstance().sysLog(DEBUG, "Unset tooltip");
+  this->UnsetToolTip();
 }
 
 void StatusSchema::drawServer(wxPaintDC& dc, const boost::shared_ptr<server_t> server)

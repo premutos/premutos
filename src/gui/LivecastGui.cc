@@ -37,7 +37,7 @@ LivecastGui::LivecastGui(boost::shared_ptr<GuiConfiguration> cfg, boost::shared_
 {
   //
   // icon
-  this->SetIcon(wxIcon(wxT("res/kitd_noc_logo.png")));
+  this->SetIcon(wxIcon(wxT("res/livecast_admin_logo.png")));
 
   //
   // menu

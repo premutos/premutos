@@ -32,6 +32,14 @@ LivecastListCtrl::LivecastListCtrl(wxWindow * parent, wxWindowID id, const wxPoi
 {
 }
 
+void LivecastListCtrl::UpdateItem(long item, long col, const std::string& value)
+{
+  if (this->GetItemText(item, col) != value)
+  {
+    this->SetItem(item, col, value);
+  }
+}
+
 void LivecastListCtrl::SetItemTextColour(long item, StreamInfos::status_t status)
 {
   switch (status)

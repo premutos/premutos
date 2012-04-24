@@ -4,6 +4,8 @@
 #include "LivecastStatus.hh"
 #include "../lib/Log.hh"
 
+#include <wx/vscroll.h>
+
 using namespace livecast;
 using namespace gui;
 using namespace monitor;
@@ -16,7 +18,8 @@ LivecastInfos::LivecastInfos(wxWindow * parent)
 
   // prepare infos
   {
-    this->infos = new wxPanel(this, wxID_ANY);
+    this->infos = new wxScrolledWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL | wxHSCROLL);
+
     wxPanel * labelPanel = new wxPanel(this->infos, wxID_ANY);
     wxPanel * valuePanel = new wxPanel(this->infos, wxID_ANY);
 
@@ -190,13 +193,6 @@ std::list<boost::shared_ptr<ResultCallbackIntf> > LivecastInfos::setInfos(boost:
   // servers
   n = 0;
   wxTreeItemId root = this->servers->GetRootItem();
-//   wxTreeItemIdValue cookie;    
-//   for (wxTreeItemId item = this->servers->GetFirstChild(root, cookie);
-//        item.IsOk();
-//        item = this->servers->GetNextChild(root, cookie))
-//   {
-//     this->servers->DeleteChildren(item);
-//   }
   this->servers->DeleteChildren(root);
   const StreamInfos::servers_t& serv = streamInfos->getServers();
   for (unsigned int r = 0; r < 2; r++)
@@ -334,7 +330,7 @@ void LivecastInfos::onProfilesListDblClicked(wxListEvent& event)
   LogError::getInstance().sysLog(DEBUG, "cdn password '%s'", (*it)[StreamInfos::PROFILE_CDN_PASSWORD].c_str());
   LogError::getInstance().sysLog(DEBUG, "cdn livename '%s'", (*it)[StreamInfos::PROFILE_CDN_LIVENAME].c_str());
   
-  wxPanel * profileDetails = new wxPanel(this->noteBook);
+  wxPanel * profileDetails = new wxScrolledWindow(this->noteBook, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL | wxHSCROLL);
 
   wxPanel * labelPanel = new wxPanel(profileDetails, wxID_ANY);
   wxPanel * valuePanel = new wxPanel(profileDetails, wxID_ANY);

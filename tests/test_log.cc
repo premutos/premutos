@@ -1,5 +1,7 @@
 #include "lib/Log.hh"
 
+using namespace livecast::lib;
+
 int main()
 {
 

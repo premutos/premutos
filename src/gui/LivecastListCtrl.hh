@@ -15,6 +15,7 @@ class LivecastListCtrl : public wxListView
 public:
   LivecastListCtrl(wxWindow * parent, bool sortable = false);
 
+  void UpdateItem(long item, long col, const std::string& value);
   void SetItemTextColour(long item, livecast::monitor::StreamInfos::status_t status);
 
   long sortCol;

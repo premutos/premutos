@@ -192,16 +192,27 @@ void LivecastResult::onStreamListUpdate(wxCommandEvent& WXUNUSED(event))
   }
   else
   {
-    this->list->DeleteAllItems();
+    unsigned int n = 0;
     for (MonitorConfiguration::map_streams_infos_t::const_iterator it = cfg->getStreamsInfos().begin(); it != cfg->getStreamsInfos().end(); ++it)
     {
-      unsigned int n = std::distance(MonitorConfiguration::map_streams_infos_t::const_iterator(cfg->getStreamsInfos().begin()), it);
-      wxListItem item;
-      item.SetId(n);
-      item.SetData(it->second->getId());
-      unsigned int n2 = this->list->InsertItem(item);
-      assert(n == n2);
+      n = std::distance(MonitorConfiguration::map_streams_infos_t::const_iterator(cfg->getStreamsInfos().begin()), it);
+      if (n >= this->list->GetItemCount())
+      {
+        wxListItem item;
+        item.SetId(n);
+        item.SetData(it->second->getId());
+        unsigned int n2 = this->list->InsertItem(item);
+        assert(n == n2);
+      }
+      else
+      {
+        this->list->SetItemData(n, it->second->getId());
+      }
       this->updateItem(it);
+    }
+    for (unsigned int i = n + 1; i < this->list->GetItemCount(); i++)
+    {
+      this->list->DeleteItem(i);
     }
   }
   this->infos->refresh();
@@ -338,10 +349,12 @@ void LivecastResult::updateItem(MonitorConfiguration::map_streams_infos_t::const
   ossStreamStatus << it->second->getStatus();
   
   LogError::getInstance().sysLog(DEBUG, "item %u : %s => %s", n, ossStreamId.str().c_str(), ossStreamStatus.str().c_str());
-  this->list->SetItem(n, ID, ossStreamId.str());
-  this->list->SetItem(n, STATUS, ossStreamStatus.str());
-  this->list->SetItem(n, MODE, it->second->getInfos()[StreamInfos::FIELDS_MODE]);
-  this->list->SetItem(n, PROTOCOL, it->second->getInfos()[StreamInfos::FIELDS_PROTOCOL]);
-  this->list->SetItem(n, SRC_IP, it->second->getInfos()[StreamInfos::FIELDS_SRC_IP]);
-  this->list->SetItem(n, BACKLOG, it->second->getInfos()[StreamInfos::FIELDS_BACKLOG]);
+
+  this->list->UpdateItem(n, ID, ossStreamId.str());
+  this->list->UpdateItem(n, STATUS, ossStreamStatus.str());
+  this->list->UpdateItem(n, MODE, it->second->getInfos()[StreamInfos::FIELDS_MODE]);
+  this->list->UpdateItem(n, PROTOCOL, it->second->getInfos()[StreamInfos::FIELDS_PROTOCOL]);
+  this->list->UpdateItem(n, SRC_IP, it->second->getInfos()[StreamInfos::FIELDS_SRC_IP]);
+  this->list->UpdateItem(n, BACKLOG, it->second->getInfos()[StreamInfos::FIELDS_BACKLOG]);
+
 }

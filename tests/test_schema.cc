@@ -30,6 +30,7 @@ public:
 }
 
 using namespace livecast::gui;
+using namespace livecast::lib;
 namespace po = boost::program_options;
 namespace pt = boost::property_tree;
 
@@ -129,6 +130,12 @@ void StatusSchemaLoader::load1(StatusSchema * const statusSchema)
   sd0->protocol = "udp multicast 224.10.10.10";
   sd0->port = 5555;
   sd0->status = StatusSchema::STATUS_RUNNING;
+  std::ostringstream streamdupStatusDetail;
+  streamdupStatusDetail << "1 RUNNING;masterbox0.1.l3.kewego.int"
+                        << "1 RUNNING;masterbox1.1.l3.kewego.int"
+                        << "1 RUNNING;masterbox2.1.l3.kewego.int"
+                        << "1 RUNNING;masterbox3.1.l3.kewego.int" ;
+  sd0->statusDetail = streamdupStatusDetail.str();
   statusSchema->addServer(sd0);
 
   //
@@ -167,6 +174,31 @@ void StatusSchemaLoader::load1(StatusSchema * const statusSchema)
   mb2->status = StatusSchema::STATUS_INITIALIZING;
   mb3->status = StatusSchema::STATUS_RUNNING;
   mb4->status = StatusSchema::STATUS_ERROR;
+
+  std::ostringstream mb1StatusDetail;
+  mb1StatusDetail << "1 WAITING" ;
+  mb1->statusDetail = mb1StatusDetail.str();
+
+  std::ostringstream mb2StatusDetail;
+  mb2StatusDetail << "1 INITIALIZING;1"
+                  << "1 INITIALIZING;2"
+                  << "1 INITIALIZING;3"
+                  << "1 INITIALIZING;4" ;
+  mb2->statusDetail = mb2StatusDetail.str();
+
+  std::ostringstream mb3StatusDetail;
+  mb3StatusDetail << "1 RUNNING;1"
+                  << "1 RUNNING;2"
+                  << "1 RUNNING;3"
+                  << "1 RUNNING;4" ;
+  mb3->statusDetail = mb3StatusDetail.str();
+
+  std::ostringstream mb4StatusDetail;
+  mb4StatusDetail << "1 ERROR;1"
+                  << "1 ERROR;2"
+                  << "1 ERROR;3"
+                  << "1 ERROR;4" ;
+  mb4->statusDetail = mb4StatusDetail.str();
 
   statusSchema->addServer(mb1);
   statusSchema->addServer(mb2);
@@ -210,6 +242,31 @@ void StatusSchemaLoader::load1(StatusSchema * const statusSchema)
   sr7->status = StatusSchema::STATUS_RUNNING;
   sr8->status = StatusSchema::STATUS_ERROR;
 
+  std::ostringstream sr5StatusDetail;
+  sr5StatusDetail << "1 WAITING" ;
+  sr5->statusDetail = sr5StatusDetail.str();
+
+  std::ostringstream sr6StatusDetail;
+  sr6StatusDetail << "1 INITIALIZING;1"
+                  << "1 INITIALIZING;2"
+                  << "1 INITIALIZING;3"
+                  << "1 INITIALIZING;4" ;
+  sr6->statusDetail = sr6StatusDetail.str();
+
+  std::ostringstream sr7StatusDetail;
+  sr7StatusDetail << "1 RUNNING;1"
+                  << "1 RUNNING;2"
+                  << "1 RUNNING;3"
+                  << "1 RUNNING;4" ;
+  sr7->statusDetail = sr7StatusDetail.str();
+
+  std::ostringstream sr8StatusDetail;
+  sr8StatusDetail << "1 ERROR;1"
+                  << "1 ERROR;2"
+                  << "1 ERROR;3"
+                  << "1 ERROR;4" ;
+  sr8->statusDetail = sr8StatusDetail.str();
+
   statusSchema->addServer(sr5);
   statusSchema->addServer(sr6);
   statusSchema->addServer(sr7);
@@ -251,6 +308,31 @@ void StatusSchemaLoader::load1(StatusSchema * const statusSchema)
   sh10->status = StatusSchema::STATUS_INITIALIZING;
   sh11->status = StatusSchema::STATUS_RUNNING;
   sh12->status = StatusSchema::STATUS_ERROR;
+
+  std::ostringstream sh09StatusDetail;
+  sh09StatusDetail << "1 WAITING" ;
+  sh09->statusDetail = sh09StatusDetail.str();
+
+  std::ostringstream sh10StatusDetail;
+  sh10StatusDetail << "1 INITIALIZING;1"
+                   << "1 INITIALIZING;2"
+                   << "1 INITIALIZING;3"
+                   << "1 INITIALIZING;4" ;
+  sh10->statusDetail = sh10StatusDetail.str();
+
+  std::ostringstream sh11StatusDetail;
+  sh11StatusDetail << "1 RUNNING;1"
+                   << "1 RUNNING;2"
+                   << "1 RUNNING;3"
+                   << "1 RUNNING;4" ;
+  sh11->statusDetail = sh11StatusDetail.str();
+
+  std::ostringstream sh12StatusDetail;
+  sh12StatusDetail << "1 ERROR;1"
+                   << "1 ERROR;2"
+                   << "1 ERROR;3"
+                   << "1 ERROR;4" ;
+  sh12->statusDetail = sh12StatusDetail.str();
 
   statusSchema->addServer(sh09);
   statusSchema->addServer(sh10);

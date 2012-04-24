@@ -38,10 +38,13 @@ public:
     wxRect rect;
     enum type_t type;
     enum status_t status;
+    std::string statusDetail;
     std::string protocol;
     unsigned short port;
     bool leaf;
     std::list<boost::shared_ptr<server_t> > srcs;
+
+    bool contained(wxPoint pt, float wRatio, float hRatio) const;
   };
 
   struct link_t
@@ -73,6 +76,7 @@ protected:
   void onOpenPopupMenu(wxMouseEvent& event);
   void onLeftDown(wxMouseEvent& event);
   void onLeftUp(wxMouseEvent& event);
+  void onMouseMotion(wxMouseEvent& event);
 
 private:
   struct line_t
