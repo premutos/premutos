@@ -48,11 +48,11 @@ void StreamInfos::status(boost::shared_ptr<ResultCallbackIntf> resultCb,
   boost::property_tree::ptree resultTmp = this->resultTree;
   this->resultTree.clear();
   boost::property_tree::ptree ptree;
-  for (int i = 0; i < this->servers.size(); i++)
+  for (unsigned int i = 0; i < this->servers.size(); i++)
   {
 
     boost::shared_ptr<boost::property_tree::ptree> statusHost(new boost::property_tree::ptree);
-    for (int j = 0; j < this->servers[i].size(); j++)
+    for (unsigned int j = 0; j < this->servers[i].size(); j++)
     {
       for (std::list<server_t>::iterator itServer = this->servers[i][j].begin(); itServer != this->servers[i][j].end(); ++itServer)
       {
@@ -166,18 +166,6 @@ void StreamInfos::status(boost::shared_ptr<ResultCallbackIntf> resultCb,
   this->parseStatus();
 
   this->modified = (resultTree != resultTmp);
-
-//   if (this->modified)
-//   {
-//     LogError::getInstance().sysLog(ERROR, "%u is modified", this->streamId);
-    
-//     std::cout << std::endl
-//               << "======================= " << this->streamId << "======================= "
-//               << std::endl;
-//     boost::property_tree::write_xml(std::cout, resultTmp);
-//     std::cout << std::endl << "---------------" << std::endl;
-//     boost::property_tree::write_xml(std::cout, resultTree);
-//   }
 
   LogError::getInstance().sysLog(DEBUG, "post result");
   resultCb->commitCheckStream(this->streamId);

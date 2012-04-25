@@ -96,7 +96,9 @@ public:
       {
       }
   };
-  typedef boost::array<boost::array<std::list<server_t>, 3>, 2> servers_t;
+  typedef std::list<server_t> servers_list_t;
+  typedef boost::array<servers_list_t, 3> servers_row_list_t;
+  typedef boost::array<servers_row_list_t, 2> servers_t;
 
 public: 
   StreamInfos(unsigned int streamId);
@@ -110,7 +112,6 @@ public:
 
   inline unsigned int getId() const { return this->streamId; }
   inline status_t getStatus() const { return this->globalStatus; }
-  inline const boost::property_tree::ptree& getResultTree() const { return this->resultTree; }
   inline const infos_t& getInfos() const { return this->infos; }
   inline const servers_t& getServers() const { return this->servers; }
   inline const profiles_t& getProfiles() const { return this->profiles; }

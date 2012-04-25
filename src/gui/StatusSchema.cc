@@ -55,30 +55,14 @@ void StatusSchema::wxServer::refresh()
 
   wxBrush brush = dc.GetBrush();
   wxBrush brushTmp = brush;
-  switch (this->infos->status)
-  {
-  case STATUS_WAITING:      brushTmp.SetColour(livecast_grey);     break;
-  case STATUS_INITIALIZING: brushTmp.SetColour(livecast_yellow);   break;
-  case STATUS_RUNNING:      brushTmp.SetColour(livecast_green);    break;
-  case STATUS_ERROR:        brushTmp.SetColour(livecast_red);      break;
-  case STATUS_UNKNOWN:      brushTmp.SetColour(livecast_darkGrey); break;
-  };
-  
+  brushTmp.SetColour(this->infos->colour);
   dc.SetBrush(brushTmp);
 
   wxRect r(wxPoint(0, 0), this->GetSize());
   dc.DrawRectangle(r);
 
   std::ostringstream title;
-  switch (this->infos->type)
-  {
-  case SERVER_STREAMDUP:     title << "STREAMDUP";     break;
-  case SERVER_MASTERBOX:     title << "MASTERBOX";     break;
-  case SERVER_STREAMER_RTMP: title << "STREAMER_RTMP"; break;
-  case SERVER_STREAMER_HLS:  title << "STREAMER_HLS";  break;
-  case SERVER_UNKNOWN:       title << "UNKNOWN TYPE";  break;
-  }
-  title << "\n" << this->infos->hostname;
+  title << this->infos->type << "\n" << this->infos->hostname;
 
   wxFont font = dc.GetFont();
 
@@ -118,13 +102,14 @@ void StatusSchema::wxServer::OnPaint(wxPaintEvent& event)
 //
 //
 
-StatusSchema::StatusSchema(wxWindow * parent)
+StatusSchema::StatusSchema(wxWindow * parent, unsigned int nbColumn)
   : wxControl(parent, wxID_ANY),
     resolution(1280, 1024),
     rectDefSize(resolution.GetWidth() * 0.12, resolution.GetHeight() * 0.2),
     margin(resolution.GetWidth() * 0.02),
     edgeSize(resolution.GetWidth() * 0.007),
-    fontSize(resolution.GetHeight() * 0.03)
+    fontSize(resolution.GetHeight() * 0.03),
+    nbColumn(nbColumn)
 {
   wxSize size = this->GetSize();
   this->wRatio = (float)(size.GetWidth()) / (float)(this->resolution.GetWidth());
@@ -140,13 +125,13 @@ void StatusSchema::addServer(boost::shared_ptr<StatusSchema::server_t> s)
 {
 
   this->servers.insert(s);
-  switch(s->type)
+  switch(s->column)
   {
-  case SERVER_STREAMDUP: this->computeCoordStreamdup(s); break;
-  case SERVER_MASTERBOX: this->computeCoordMasterbox(s); break;
-  case SERVER_STREAMER_RTMP: this->computeCoordStreamerRtmp(s); break;
-  case SERVER_STREAMER_HLS: this->computeCoordStreamerHls(s); break;
-  case SERVER_UNKNOWN: break;
+  case 0: this->computeCoordStreamdup(s); break;
+  case 1: this->computeCoordMasterbox(s); break;
+  case 2: this->computeCoordStreamerRtmp(s); break;
+  case 3: this->computeCoordStreamerHls(s); break;
+  default: LogError::getInstance().sysLog(ERROR, "bad status schema column %u", s->column); break;
   }
 
   LogError::getInstance().sysLog(DEBUG, "add server [%d;%d;%d;%d]",
@@ -166,7 +151,7 @@ void StatusSchema::linkAllServers()
 {
   for (servers_t::iterator itSrc = this->servers.begin(); itSrc != this->servers.end(); ++itSrc)
   {
-    if ((*itSrc)->type == SERVER_STREAMDUP)
+    if ((*itSrc)->column == 0)
     {
       link_t l1;
       l1.dsts.push_back(*itSrc);
@@ -174,7 +159,7 @@ void StatusSchema::linkAllServers()
       link_t l2;
       for (servers_t::iterator itDst = this->servers.begin(); itDst != this->servers.end(); ++itDst)
       {
-        if ((*itDst)->type == SERVER_MASTERBOX)
+        if ((*itDst)->column == 1)
         {
           l2.src = *itSrc;
           l2.dsts.push_back(*itDst);
@@ -183,12 +168,12 @@ void StatusSchema::linkAllServers()
       }
       this->links.push_back(l2);
     }
-    else if (((*itSrc)->type == SERVER_MASTERBOX) && (!(*itSrc)->leaf))
+    else if (((*itSrc)->column == 1) && (!(*itSrc)->leaf))
     {
       link_t l;
       for (servers_t::iterator itDst = this->servers.begin(); itDst != this->servers.end(); ++itDst)
       {
-        if (((*itDst)->type == SERVER_STREAMER_RTMP) || ((*itDst)->type == SERVER_STREAMER_HLS))
+        if (((*itDst)->column == 2) || ((*itDst)->column == 3))
         {
           l.src = *itSrc;
           l.dsts.push_back(*itDst);
@@ -197,7 +182,7 @@ void StatusSchema::linkAllServers()
       }
       this->links.push_back(l);
     }
-    else if (((*itSrc)->type == SERVER_STREAMER_RTMP) || ((*itSrc)->type == SERVER_STREAMER_RTMP))
+    else if (((*itSrc)->column == 2) || ((*itSrc)->column == 3))
     {
     }
   }
@@ -214,7 +199,7 @@ void StatusSchema::computeCoordStreamdup(boost::shared_ptr<StatusSchema::server_
 void StatusSchema::computeCoordMasterbox(boost::shared_ptr<StatusSchema::server_t> server) const
 {
   unsigned int nbMB = std::count_if(this->servers.begin(), this->servers.end(), 
-                                    boost::bind(std::equal_to<type_t>(), boost::bind(&server_t::type, _1), SERVER_MASTERBOX));
+                                    boost::bind(std::equal_to<unsigned int>(), boost::bind(&server_t::column, _1), 1));
 
   LogError::getInstance().sysLog(DEBUG, "nb masterbox : %u", nbMB);
 
@@ -227,7 +212,7 @@ void StatusSchema::computeCoordMasterbox(boost::shared_ptr<StatusSchema::server_
   int pos = 0;
   for (servers_t::iterator it = this->servers.begin(); it != this->servers.end(); ++it)
   {
-    if ((*it)->type == SERVER_MASTERBOX)
+    if ((*it)->column == 1)
     { 
       (*it)->rect.height = std::min((int)((yMargin << 1) / 3), this->rectDefSize.GetHeight());
       pos = ((n >> 1) + ((n % 2) == 1 ? 1 : 0)) * (((n % 2) == 1) ? -1 : 1);
@@ -241,7 +226,7 @@ void StatusSchema::computeCoordMasterbox(boost::shared_ptr<StatusSchema::server_
 void StatusSchema::computeCoordStreamerRtmp(boost::shared_ptr<StatusSchema::server_t> server) const
 {
   unsigned int nbSR = std::count_if(this->servers.begin(), this->servers.end(), 
-                                    boost::bind(std::equal_to<type_t>(), boost::bind(&server_t::type, _1), SERVER_STREAMER_RTMP));
+                                    boost::bind(std::equal_to<unsigned int>(), boost::bind(&server_t::column, _1), 2));
 
   LogError::getInstance().sysLog(DEBUG, "nb rtmp streamer : %u", nbSR);
 
@@ -252,7 +237,7 @@ void StatusSchema::computeCoordStreamerRtmp(boost::shared_ptr<StatusSchema::serv
   unsigned int n = 1;
   for (servers_t::iterator it = this->servers.begin(); it != this->servers.end(); ++it)
   {
-    if ((*it)->type == SERVER_STREAMER_RTMP)
+    if ((*it)->column == 2)
     { 
       (*it)->rect.height = std::min((int)((yMargin << 1) / 3), this->rectDefSize.GetHeight());
       (*it)->rect.y = (this->resolution.GetHeight() >> 1) - (yMargin * n) - ((*it)->rect.height >> 1);
@@ -264,7 +249,7 @@ void StatusSchema::computeCoordStreamerRtmp(boost::shared_ptr<StatusSchema::serv
 void StatusSchema::computeCoordStreamerHls(boost::shared_ptr<StatusSchema::server_t> server) const
 {
   unsigned int nbSH = std::count_if(this->servers.begin(), this->servers.end(), 
-                                    boost::bind(std::equal_to<type_t>(), boost::bind(&server_t::type, _1), SERVER_STREAMER_HLS));
+                                    boost::bind(std::equal_to<unsigned int>(), boost::bind(&server_t::column, _1), 3));
 
   LogError::getInstance().sysLog(DEBUG, "nb hls streamer : %u", nbSH);
 
@@ -275,7 +260,7 @@ void StatusSchema::computeCoordStreamerHls(boost::shared_ptr<StatusSchema::serve
   unsigned int n = 1;
   for (servers_t::iterator it = this->servers.begin(); it != this->servers.end(); ++it)
   {
-    if ((*it)->type == SERVER_STREAMER_HLS)
+    if ((*it)->column == 3)
     { 
       (*it)->rect.height = std::min((int)((yMargin << 1) / 3), this->rectDefSize.GetHeight());
       (*it)->rect.y = (this->resolution.GetHeight() >> 1) + (yMargin * n) - ((*it)->rect.height >> 1);
@@ -488,7 +473,7 @@ void StatusSchema::computeLink(const link_t& link, unsigned int& nb)
       // no source : link from the left or right border
       wxPoint p1, p2;
       std::ostringstream label;
-      if ((*dst)->type == SERVER_STREAMDUP)
+      if ((*dst)->column == 0)
       {
         p1.x = 0;
         p1.y = (*dst)->rect.y + ((*dst)->rect.GetHeight() >> 1);
@@ -496,7 +481,7 @@ void StatusSchema::computeLink(const link_t& link, unsigned int& nb)
         p2.y = p1.y;
         label << (*dst)->protocol << ":" << (*dst)->port;
       }
-      else if ((*dst)->type == SERVER_STREAMER_RTMP)
+      else if ((*dst)->column == 2)
       {
         p1.x = this->resolution.GetWidth();
         p1.y = (*dst)->rect.y + ((*dst)->rect.GetHeight() >> 1);
@@ -504,7 +489,7 @@ void StatusSchema::computeLink(const link_t& link, unsigned int& nb)
         p2.y = p1.y;
         label << (*dst)->protocol << ":1935"; // fixme
       }
-      else if ((*dst)->type == SERVER_STREAMER_HLS)
+      else if ((*dst)->column == 2)
       {
         p1.x = this->resolution.GetWidth();
         p1.y = (*dst)->rect.y + ((*dst)->rect.GetHeight() >> 1);

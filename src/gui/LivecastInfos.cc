@@ -274,11 +274,11 @@ std::list<boost::shared_ptr<ResultCallbackIntf> > LivecastInfos::setInfos(boost:
   }
 
   // primary status schema
-  this->primaryStatusSchema = new LivecastStatus(this->noteBook, streamInfos, true);
+  this->primaryStatusSchema = new LivecastStatus(this->noteBook, streamInfos);
   this->noteBook->InsertPage(2, this->primaryStatusSchema, "primary schema", true);
 
   // backup status schema
-  this->backupStatusSchema = new LivecastStatus(this->noteBook, streamInfos, true, false);
+  this->backupStatusSchema = new LivecastStatus(this->noteBook, streamInfos, false);
   this->noteBook->InsertPage(3, this->backupStatusSchema, "backup schema", true);
 
   // set selection on servers list

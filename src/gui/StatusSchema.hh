@@ -13,31 +13,15 @@ namespace gui {
 class StatusSchema : public wxControl
 {
 public:
-  enum type_t
-  {
-    SERVER_STREAMDUP,
-    SERVER_MASTERBOX,
-    SERVER_STREAMER_RTMP,
-    SERVER_STREAMER_HLS,
-    SERVER_UNKNOWN,
-  };
-
-  enum status_t
-  {
-    STATUS_WAITING,
-    STATUS_INITIALIZING,
-    STATUS_RUNNING,
-    STATUS_ERROR,
-    STATUS_UNKNOWN,
-  };
 
   struct server_t
   {
     unsigned int id;
     std::string hostname;
     wxRect rect;
-    enum type_t type;
-    enum status_t status;
+    wxColour colour;
+    unsigned int column;
+    std::string type;
     std::string statusDetail;
     std::string protocol;
     unsigned short port;
@@ -75,7 +59,7 @@ public:
   };
 
 public:
-  StatusSchema(wxWindow * parent);
+  StatusSchema(wxWindow * parent, unsigned int nbColumn);
 
   void addServer(boost::shared_ptr<server_t> server);
   void addLink(const link_t& link);
@@ -139,6 +123,7 @@ private:
   lines_t vLines;
   float wRatio;
   float hRatio;
+  unsigned int nbColumn;
 };
 
 }

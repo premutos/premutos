@@ -6,7 +6,6 @@
 #include <wx/wx.h>
 #include <wx/treectrl.h>
 #include <list>
-#include <boost/property_tree/ptree.hpp>
 
 namespace livecast {
 namespace gui {
@@ -16,7 +15,7 @@ class StatusSchema;
 class LivecastStatus : public wxPanel
 {
 public:
-  LivecastStatus(wxWindow * parent, boost::shared_ptr<const livecast::monitor::StreamInfos> streamInfos, bool noTree = false, bool primary = true);
+  LivecastStatus(wxWindow * parent, boost::shared_ptr<const livecast::monitor::StreamInfos> streamInfos, bool primary = true);
   ~LivecastStatus();
   
   void commitCheckStream(unsigned int streamId);
@@ -24,14 +23,11 @@ public:
 private:
   void onCheckStream(wxCommandEvent& ev);
   void onRefresh(wxCommandEvent & ev);
-  wxTreeItemId updateTree(const boost::property_tree::ptree& ptree, const wxTreeItemId id);
   StatusSchema * statusSchema;
-  wxTreeCtrl * tree;
 
   const wxEventType checkStreamEvent;  
   unsigned int streamId;
   boost::shared_ptr<const livecast::monitor::StreamInfos> streamInfos;
-  const bool noTree;
   const bool primary;
 };
 

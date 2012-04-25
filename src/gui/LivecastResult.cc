@@ -8,8 +8,6 @@
 #include "LivecastEditPipeline.hh"
 #include "GuiConfiguration.hh"
 
-#include <boost/property_tree/xml_parser.hpp>
-
 namespace livecast {
 namespace gui {
 

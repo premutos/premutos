@@ -1,41 +1,26 @@
 #include "../lib/Log.hh"
+#include "Util.hh"
 #include "LivecastStatus.hh"
 #include "LivecastResult.hh"
 #include "StatusSchema.hh"
 
 #include <wx/splitter.h>
 
-#include <boost/property_tree/xml_parser.hpp>
-
 using namespace livecast;
 using namespace livecast::monitor;
 using namespace livecast::gui;
 using namespace livecast::lib;
 
-LivecastStatus::LivecastStatus(wxWindow * parent, boost::shared_ptr<const StreamInfos> streamInfos, bool noTree, bool primary)
+LivecastStatus::LivecastStatus(wxWindow * parent, boost::shared_ptr<const StreamInfos> streamInfos, bool primary)
   : wxPanel(parent, wxID_ANY),
     checkStreamEvent(wxNewEventType()),
     streamId(streamInfos->getId()),
     streamInfos(streamInfos),
-    noTree(noTree),
     primary(primary)
 { 
   wxBoxSizer * box = new wxBoxSizer(wxHORIZONTAL);
-  if (this->noTree)
-  {
-    this->statusSchema = new StatusSchema(this);
-    box->Add(this->statusSchema, 1, wxEXPAND | wxALL, 0);
-  }
-  else
-  {
-    wxSplitterWindow * splitter = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D | wxSP_BORDER);
-    this->statusSchema = new StatusSchema(splitter);
-    this->tree = new wxTreeCtrl(splitter, wxID_ANY);
-    splitter->SplitVertically(this->tree, this->statusSchema, parent->GetSize().GetWidth() / 5);
-    splitter->SetSashGravity(0.0);
-    splitter->SetMinimumPaneSize(std::max(100, parent->GetSize().GetWidth() / 5));
-    box->Add(splitter, 1, wxEXPAND | wxALL, 0);
-  }
+  this->statusSchema = new StatusSchema(this, 4);
+  box->Add(this->statusSchema, 1, wxEXPAND | wxALL, 0);
   this->SetSizer(box);
 
   this->Connect(checkStreamEvent, wxCommandEventHandler(LivecastStatus::onCheckStream));
@@ -53,102 +38,52 @@ void LivecastStatus::commitCheckStream(unsigned int streamId)
   this->GetEventHandler()->AddPendingEvent(event);
 }
 
-wxTreeItemId LivecastStatus::updateTree(const boost::property_tree::ptree& ptree, const wxTreeItemId id)
-{
-  wxTreeItemId idReturn = id;
-  if (ptree.size() > 0)
-  {    
-    boost::property_tree::ptree::const_iterator it;
-    for (it = ptree.begin(); it != ptree.end(); ++it)
-    {    
-      idReturn = this->updateTree(it->second, this->tree->AppendItem(id, it->first));
-    }
-  }
-  else
-  {
-    this->tree->AppendItem(id, ptree.data());
-  }
-  return idReturn;
-}
-
 void LivecastStatus::onCheckStream(wxCommandEvent& ev)
 {
   LogError::getInstance().sysLog(DEBUG, "get status of stream %d", ev.GetInt());
 
-  // tree
-  if (!this->noTree)
-  {
-    this->tree->DeleteAllItems();
-    wxTreeItemId idTree = this->tree->AddRoot("servers");
-    this->updateTree(this->streamInfos->getResultTree(), idTree);
-    this->tree->ExpandAll();  
-  }
-
-  // schema
-  const boost::property_tree::ptree& statusInfos = this->streamInfos->getResultTree();
-
-//   std::cout << "====" << std::endl;
-//   boost::property_tree::write_xml(std::cout, statusInfos);
-//   std::cout << std::endl;
-//   std::cout << "====" << std::endl;
-
   unsigned int id = 0;
-  std::string row = this->primary ? "status.primary" : "status.backup";
-  for (boost::property_tree::ptree::const_iterator it = statusInfos.get_child(row.c_str()).begin(); it != statusInfos.get_child(row.c_str()).end(); ++it)
+  unsigned int row = this->primary ? 0 : 1;
+  const StreamInfos::servers_t& servers = this->streamInfos->getServers();
+  for (StreamInfos::servers_row_list_t::const_iterator itType = servers[row].begin(); itType != servers[row].end(); ++itType)
   {
-    const boost::optional<std::string> typeStr = it->second.get_optional<std::string>("type");
-    const boost::optional<std::string> statusStr = it->second.get_optional<std::string>("result");
-
-    StatusSchema::type_t type = ((*typeStr == "streamdup") ? StatusSchema::SERVER_STREAMDUP :
-                                 (*typeStr == "masterbox") ? StatusSchema::SERVER_MASTERBOX :
-                                 (*typeStr == "rtmp streamer") ? StatusSchema::SERVER_STREAMER_RTMP :
-                                 (*typeStr == "hls streamer") ? StatusSchema::SERVER_STREAMER_HLS :
-                                 StatusSchema::SERVER_UNKNOWN) ;
-    StatusSchema::status_t status = (((*statusStr).find("WAITING") != std::string::npos) ? StatusSchema::STATUS_WAITING :
-                                     ((*statusStr).find("INITIALIZING") != std::string::npos) ? StatusSchema::STATUS_INITIALIZING :
-                                     ((*statusStr).find("RUNNING") != std::string::npos) ? StatusSchema::STATUS_RUNNING :
-                                     ((*statusStr).find("ERROR") != std::string::npos) ? StatusSchema::STATUS_ERROR :
-                                     StatusSchema::STATUS_UNKNOWN) ;
-
-    boost::shared_ptr<StatusSchema::server_t> server(new StatusSchema::server_t);
-    server->id = id++;
-    server->hostname = it->first;
-    server->type = type;
-    server->status = status;
-    server->protocol = *(it->second.get_optional<std::string>("protocol"));
-    server->port = *(it->second.get_optional<unsigned int>("port"));
-    server->leaf = *(it->second.get_optional<bool>("leaf"));
-
-    // details
-    unsigned int t = ((type == StatusSchema::SERVER_STREAMDUP) ? 0 :
-                      (type == StatusSchema::SERVER_MASTERBOX) ? 1 :
-                      2);
-    unsigned int r = this->primary ? 0 : 1;
-    const StreamInfos::servers_t& servers = streamInfos->getServers();
-    for (std::list<StreamInfos::server_t>::const_iterator itServer = servers[r][t].begin(); itServer != servers[r][t].end(); ++itServer)
+    for (StreamInfos::servers_list_t::const_iterator itServer = (*itType).begin(); itServer != (*itType).end(); ++itServer)
     {
-      if (it->first != (*itServer).host) continue;
-      
-      if ((type == StatusSchema::SERVER_STREAMDUP) && ((*itServer).adminPort != 1111)) continue;
-      if ((type == StatusSchema::SERVER_MASTERBOX) && ((*itServer).adminPort != 2222)) continue;
-      if ((type == StatusSchema::SERVER_STREAMER_RTMP) && ((*itServer).adminPort != 3333)) continue;
-      if ((type == StatusSchema::SERVER_STREAMER_HLS) && ((*itServer).adminPort != 4444)) continue;
+      boost::shared_ptr<StatusSchema::server_t> server(new StatusSchema::server_t);
+      server->id = id++;
+      server->hostname = (*itServer).host;
+      server->type = (((*itServer).type == StreamInfos::server_t::STREAM_DUP) ? "STREAMDUP" :
+                      ((*itServer).type == StreamInfos::server_t::MASTER_BOX) ? "MASTERBOX" :
+                      ((*itServer).type == StreamInfos::server_t::STREAMER_RTMP) ? "STREAMER_RTMP" :
+                      ((*itServer).type == StreamInfos::server_t::STREAMER_HLS) ? "STREAMER_HLS" :
+                      "UNKNOWN");
+      server->column = (((*itServer).type == StreamInfos::server_t::STREAM_DUP) ? 0 :
+                        ((*itServer).type == StreamInfos::server_t::MASTER_BOX) ? 1 :
+                        ((*itServer).type == StreamInfos::server_t::STREAMER_RTMP) ? 2 :
+                        ((*itServer).type == StreamInfos::server_t::STREAMER_HLS) ? 3 : 
+                        4);
+      server->colour = (((*itServer).status == StreamInfos::STATUS_WAITING) ? livecast_grey:
+                        ((*itServer).status == StreamInfos::STATUS_INITIALIZING) ? livecast_yellow:
+                        ((*itServer).status == StreamInfos::STATUS_RUNNING) ? livecast_green:
+                        ((*itServer).status == StreamInfos::STATUS_ERROR) ? livecast_red:
+                        livecast_darkGrey);
+      server->protocol = (*itServer).protocol;
+      server->port = (*itServer).port;
+      server->leaf = (*itServer).leaf;
 
-      server->statusDetail = server->hostname;
+      server->statusDetail = (*itServer).host;
       for (std::list<boost::tuple<StreamInfos::status_t, std::string, std::string> >::const_iterator itDetail = (*itServer).statusDetails.begin();
            itDetail != (*itServer).statusDetails.end(); ++itDetail)
       {
         server->statusDetail += "\n";
         server->statusDetail += (*itDetail).get<1>();
       }
-      break;
-    }
    
-    LogError::getInstance().sysLog(DEBUG, "add server : [id:%d] [host:%s] [type:%d] [status:%d] [protocol:%s] [port:%u] [leaf:%d]",
-                                   server->id, server->hostname.c_str(), server->type, server->status, server->protocol.c_str(), server->port, server->leaf);
-    LogError::getInstance().sysLog(DEBUG, "status details : \n%s", server->statusDetail.c_str());
-
-    this->statusSchema->addServer(server);
+      LogError::getInstance().sysLog(DEBUG, "add server : [id:%d] [host:%s]", server->id, server->hostname.c_str(), server->type.c_str());
+      LogError::getInstance().sysLog(DEBUG, "status details : \n%s", server->statusDetail.c_str());
+      
+      this->statusSchema->addServer(server);
+    }
   }
   this->statusSchema->linkAllServers();
   wxPaintEvent event;
