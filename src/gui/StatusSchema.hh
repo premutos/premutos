@@ -64,6 +64,7 @@ public:
   void addServer(boost::shared_ptr<server_t> server);
   void addLink(const link_t& link);
   void linkAllServers();
+  void reset();
 
   const wxSize resolution;
   const wxSize rectDefSize;

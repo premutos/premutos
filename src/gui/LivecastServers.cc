@@ -195,7 +195,6 @@ void LivecastServers::fillStatus(wxTreeListCtrl * statusTree, boost::property_tr
   unsigned int n = 0;
   wxTreeItemId parent;
   wxTreeItemId item;
-  unsigned int previousId = 0;
   std::map<unsigned int, wxTreeItemId> streamIds;
   for (boost::property_tree::ptree::const_iterator itResult = result.get_child("").begin(); 
        itResult != result.get_child("").end(); ++itResult)

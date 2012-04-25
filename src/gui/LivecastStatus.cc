@@ -24,6 +24,11 @@ LivecastStatus::LivecastStatus(wxWindow * parent, boost::shared_ptr<const Stream
   this->SetSizer(box);
 
   this->Connect(checkStreamEvent, wxCommandEventHandler(LivecastStatus::onCheckStream));
+
+  LogError::getInstance().sysLog(DEBUG, "commit check stream");
+  wxCommandEvent event(checkStreamEvent);
+  event.SetInt(streamId);
+  this->GetEventHandler()->AddPendingEvent(event);
 }
 
 LivecastStatus::~LivecastStatus()
@@ -42,6 +47,7 @@ void LivecastStatus::onCheckStream(wxCommandEvent& ev)
 {
   LogError::getInstance().sysLog(DEBUG, "get status of stream %d", ev.GetInt());
 
+  this->statusSchema->reset();
   unsigned int id = 0;
   unsigned int row = this->primary ? 0 : 1;
   const StreamInfos::servers_t& servers = this->streamInfos->getServers();

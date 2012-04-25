@@ -167,8 +167,11 @@ void StreamInfos::status(boost::shared_ptr<ResultCallbackIntf> resultCb,
 
   this->modified = (resultTree != resultTmp);
 
-  LogError::getInstance().sysLog(DEBUG, "post result");
-  resultCb->commitCheckStream(this->streamId);
+  if (this->modified)
+  {
+    LogError::getInstance().sysLog(DEBUG, "post result");
+    resultCb->commitCheckStream(this->streamId);
+  }
 }
 
 void StreamInfos::reinit(const boost::shared_ptr<MonitorConfiguration> cfg)

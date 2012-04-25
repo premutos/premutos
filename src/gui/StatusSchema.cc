@@ -188,6 +188,14 @@ void StatusSchema::linkAllServers()
   }
 }
 
+void StatusSchema::reset()
+{
+  this->servers.clear();
+  this->links.clear();
+  this->hLines.clear();
+  this->vLines.clear();
+}
+
 void StatusSchema::computeCoordStreamdup(boost::shared_ptr<StatusSchema::server_t> server) const
 {
   server->rect.x = this->resolution.GetWidth() * 0.1;
