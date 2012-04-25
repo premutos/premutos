@@ -33,13 +33,13 @@ StatusSchema::wxServer::wxServer(StatusSchema * parent,
 
 void StatusSchema::wxServer::onMouseEnter(wxMouseEvent& WXUNUSED(event))
 {
-  LogError::getInstance().sysLog(ERROR, "mouse enter in %s", this->infos->hostname.c_str());
+  LogError::getInstance().sysLog(DEBUG, "mouse enter in %s", this->infos->hostname.c_str());
   this->SetToolTip(this->infos->statusDetail);
 }
 
 void StatusSchema::wxServer::onMouseLeave(wxMouseEvent& WXUNUSED(event))
 {
-  LogError::getInstance().sysLog(ERROR, "mouse leave %s", this->infos->hostname.c_str());
+  LogError::getInstance().sysLog(DEBUG, "mouse leave %s", this->infos->hostname.c_str());
   this->UnsetToolTip();
 }
 

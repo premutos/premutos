@@ -115,15 +115,38 @@ void LivecastStatus::onCheckStream(wxCommandEvent& ev)
     server->hostname = it->first;
     server->type = type;
     server->status = status;
-    server->statusDetail = it->first;
-    server->statusDetail += "\n";
-    server->statusDetail += "no status detail available";
     server->protocol = *(it->second.get_optional<std::string>("protocol"));
     server->port = *(it->second.get_optional<unsigned int>("port"));
     server->leaf = *(it->second.get_optional<bool>("leaf"));
+
+    // details
+    unsigned int t = ((type == StatusSchema::SERVER_STREAMDUP) ? 0 :
+                      (type == StatusSchema::SERVER_MASTERBOX) ? 1 :
+                      2);
+    unsigned int r = this->primary ? 0 : 1;
+    const StreamInfos::servers_t& servers = streamInfos->getServers();
+    for (std::list<StreamInfos::server_t>::const_iterator itServer = servers[r][t].begin(); itServer != servers[r][t].end(); ++itServer)
+    {
+      if (it->first != (*itServer).host) continue;
+      
+      if ((type == StatusSchema::SERVER_STREAMDUP) && ((*itServer).adminPort != 1111)) continue;
+      if ((type == StatusSchema::SERVER_MASTERBOX) && ((*itServer).adminPort != 2222)) continue;
+      if ((type == StatusSchema::SERVER_STREAMER_RTMP) && ((*itServer).adminPort != 3333)) continue;
+      if ((type == StatusSchema::SERVER_STREAMER_HLS) && ((*itServer).adminPort != 4444)) continue;
+
+      server->statusDetail = server->hostname;
+      for (std::list<boost::tuple<StreamInfos::status_t, std::string, std::string> >::const_iterator itDetail = (*itServer).statusDetails.begin();
+           itDetail != (*itServer).statusDetails.end(); ++itDetail)
+      {
+        server->statusDetail += "\n";
+        server->statusDetail += (*itDetail).get<1>();
+      }
+      break;
+    }
    
     LogError::getInstance().sysLog(DEBUG, "add server : [id:%d] [host:%s] [type:%d] [status:%d] [protocol:%s] [port:%u] [leaf:%d]",
                                    server->id, server->hostname.c_str(), server->type, server->status, server->protocol.c_str(), server->port, server->leaf);
+    LogError::getInstance().sysLog(DEBUG, "status details : \n%s", server->statusDetail.c_str());
 
     this->statusSchema->addServer(server);
   }
