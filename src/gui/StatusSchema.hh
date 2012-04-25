@@ -53,6 +53,27 @@ public:
     std::list<boost::shared_ptr<server_t> > dsts;
   };
 
+  class wxServer : public wxControl
+  {
+  public:
+    wxServer(StatusSchema * parent, 
+             boost::shared_ptr<server_t> server,
+             wxPoint position,
+             wxSize size);
+
+    const boost::shared_ptr<server_t> getInfos() const { return this->infos; }
+    void refresh();
+
+  protected:
+    void onMouseEnter(wxMouseEvent& event);
+    void onMouseLeave(wxMouseEvent& event);
+    void OnPaint(wxPaintEvent& event);
+    
+  private:
+    StatusSchema * statusSchema;
+    boost::shared_ptr<server_t> infos;
+  };
+
 public:
   StatusSchema(wxWindow * parent);
 
@@ -103,7 +124,6 @@ private:
   typedef std::set<boost::shared_ptr<server_t>, struct server_cmp> servers_t;
   typedef std::list<struct link_t> links_t;
 
-  void drawServer(wxPaintDC& dc, const boost::shared_ptr<server_t> server);
   void drawLines(wxPaintDC& dc);
   void drawLineWithEdges(wxPaintDC& dc, const line_t& line, const std::list<wxPoint>& edges);
   void drawLine(wxPaintDC& dc, wxPoint p1, wxPoint p2);

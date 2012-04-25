@@ -18,6 +18,106 @@ bool StatusSchema::server_t::contained(wxPoint pt, float wRatio, float hRatio) c
 //
 //
 
+StatusSchema::wxServer::wxServer(StatusSchema * parent, 
+                                 boost::shared_ptr<StatusSchema::server_t> server,
+                                 wxPoint position,
+                                 wxSize size)
+  : wxControl(parent, wxID_ANY, position, size),
+    statusSchema(parent),
+    infos(server)
+{
+  this->Bind(wxEVT_PAINT, &wxServer::OnPaint, this, wxID_ANY);
+  this->Bind(wxEVT_ENTER_WINDOW, &wxServer::onMouseEnter, this, wxID_ANY);
+  this->Bind(wxEVT_LEAVE_WINDOW, &wxServer::onMouseLeave, this, wxID_ANY);
+}
+
+void StatusSchema::wxServer::onMouseEnter(wxMouseEvent& WXUNUSED(event))
+{
+  LogError::getInstance().sysLog(ERROR, "mouse enter in %s", this->infos->hostname.c_str());
+  this->SetToolTip(this->infos->statusDetail);
+}
+
+void StatusSchema::wxServer::onMouseLeave(wxMouseEvent& WXUNUSED(event))
+{
+  LogError::getInstance().sysLog(ERROR, "mouse leave %s", this->infos->hostname.c_str());
+  this->UnsetToolTip();
+}
+
+void StatusSchema::wxServer::refresh()
+{
+  wxPaintDC dc(this);
+  dc.SetBrush(wxNullBrush);
+
+  this->Move(this->infos->rect.x * this->statusSchema->wRatio, 
+             this->infos->rect.y * this->statusSchema->hRatio);
+  this->SetSize(this->infos->rect.width * this->statusSchema->wRatio, 
+                this->infos->rect.height * this->statusSchema->hRatio);
+
+  wxBrush brush = dc.GetBrush();
+  wxBrush brushTmp = brush;
+  switch (this->infos->status)
+  {
+  case STATUS_WAITING:      brushTmp.SetColour(livecast_grey);     break;
+  case STATUS_INITIALIZING: brushTmp.SetColour(livecast_yellow);   break;
+  case STATUS_RUNNING:      brushTmp.SetColour(livecast_green);    break;
+  case STATUS_ERROR:        brushTmp.SetColour(livecast_red);      break;
+  case STATUS_UNKNOWN:      brushTmp.SetColour(livecast_darkGrey); break;
+  };
+  
+  dc.SetBrush(brushTmp);
+
+  wxRect r(wxPoint(0, 0), this->GetSize());
+  dc.DrawRectangle(r);
+
+  std::ostringstream title;
+  switch (this->infos->type)
+  {
+  case SERVER_STREAMDUP:     title << "STREAMDUP";     break;
+  case SERVER_MASTERBOX:     title << "MASTERBOX";     break;
+  case SERVER_STREAMER_RTMP: title << "STREAMER_RTMP"; break;
+  case SERVER_STREAMER_HLS:  title << "STREAMER_HLS";  break;
+  case SERVER_UNKNOWN:       title << "UNKNOWN TYPE";  break;
+  }
+  title << "\n" << this->infos->hostname;
+
+  wxFont font = dc.GetFont();
+
+  wxSize pixelSize = font.GetPixelSize();
+  unsigned int length = this->infos->hostname.size() * pixelSize.GetWidth();
+  LogError::getInstance().sysLog(DEBUG, "length of %s : %d (%d * %d) >? %d", 
+                                 this->infos->hostname.c_str(), length, this->infos->hostname.length(), pixelSize.GetWidth(), this->GetSize().GetWidth());
+
+  if (length > this->GetSize().GetWidth())
+  {
+    float pixelRatio = (float)this->GetSize().GetWidth() / (float)length;
+    LogError::getInstance().sysLog(DEBUG, "ratio : %f", pixelRatio);
+    LogError::getInstance().sysLog(DEBUG, "((%d * %f) == %d)", 
+                                   this->infos->hostname.size() * pixelSize.GetWidth(), pixelRatio, this->GetSize().GetWidth());
+    pixelSize *= pixelRatio;
+    if (pixelSize.GetHeight() == 0)
+    {
+      pixelSize.SetHeight(1);
+    }
+    font.SetPixelSize(pixelSize);
+  }
+
+  dc.SetFont(font);
+  dc.SetPen(*wxBLACK_PEN);
+
+  dc.DrawLabel(title.str(), r, wxALIGN_CENTRE);
+  dc.SetBrush(brush);
+}
+
+void StatusSchema::wxServer::OnPaint(wxPaintEvent& event)
+{
+  LogError::getInstance().sysLog(DEBUG, "draw %s", this->infos->hostname.c_str());
+  this->refresh();
+  event.Skip();
+}
+
+//
+//
+
 StatusSchema::StatusSchema(wxWindow * parent)
   : wxControl(parent, wxID_ANY),
     resolution(1280, 1024),
@@ -26,6 +126,9 @@ StatusSchema::StatusSchema(wxWindow * parent)
     edgeSize(resolution.GetWidth() * 0.007),
     fontSize(resolution.GetHeight() * 0.03)
 {
+  wxSize size = this->GetSize();
+  this->wRatio = (float)(size.GetWidth()) / (float)(this->resolution.GetWidth());
+  this->hRatio = (float)(size.GetHeight()) / (float)(this->resolution.GetHeight());
   this->Bind(wxEVT_PAINT, &StatusSchema::refresh, this, wxID_ANY);
   this->Bind(wxEVT_RIGHT_DOWN, &StatusSchema::onOpenPopupMenu, this, wxID_ANY);
   this->Bind(wxEVT_LEFT_DOWN, &StatusSchema::onLeftDown, this, wxID_ANY);
@@ -46,6 +149,12 @@ void StatusSchema::addServer(boost::shared_ptr<StatusSchema::server_t> s)
   case SERVER_UNKNOWN: break;
   }
 
+  LogError::getInstance().sysLog(DEBUG, "add server [%d;%d;%d;%d]",
+                                 s->rect.x * this->wRatio, s->rect.y * this->hRatio, 
+                                 s->rect.width * this->wRatio, s->rect.height * this->hRatio);
+  wxServer * server = new wxServer(this, s, 
+                                   wxPoint(s->rect.x * this->wRatio, s->rect.y * this->hRatio), 
+                                   wxSize(s->rect.width * this->wRatio, s->rect.height * this->hRatio));
 }
 
 void StatusSchema::addLink(const StatusSchema::link_t& l)
@@ -200,8 +309,15 @@ void StatusSchema::refresh(wxPaintEvent& WXUNUSED(event))
   std::for_each(this->links.begin(), this->links.end(),
                 boost::bind(&StatusSchema::computeLink, this, _1, n));
 
-  std::for_each(this->servers.begin(), this->servers.end(),
-                boost::bind(&StatusSchema::drawServer, this, boost::ref(dc), _1));
+  wxWindowList & l = this->GetChildren();
+  for (wxWindowList::iterator it = l.begin(); it != l.end(); ++it)
+  {
+    wxServer * s = dynamic_cast<wxServer*>(*it);
+    if (s != 0)
+    {
+      s->refresh();
+    }
+  }
 
   this->drawLines(dc);
 }
@@ -211,7 +327,7 @@ void StatusSchema::onOpenPopupMenu(wxMouseEvent& WXUNUSED(event))
 //   LogError::getInstance().sysLog(ERROR, "");
 }
 
-void StatusSchema::onLeftDown(wxMouseEvent& event)
+void StatusSchema::onLeftDown(wxMouseEvent& WXUNUSED(event))
 {
 //   LogError::getInstance().sysLog(ERROR, "");
 }
@@ -221,62 +337,9 @@ void StatusSchema::onLeftUp(wxMouseEvent& WXUNUSED(event))
 //   LogError::getInstance().sysLog(ERROR, "");
 }
 
-void StatusSchema::onMouseMotion(wxMouseEvent& event)
+void StatusSchema::onMouseMotion(wxMouseEvent& WXUNUSED(event))
 {
-  wxPaintDC dc(this);
-  wxPoint pt = event.GetLogicalPosition(dc);
-  for (servers_t::const_iterator it = this->servers.begin(); it != this->servers.end(); ++it)
-  {
-    if ((*it)->contained(pt, this->wRatio, this->hRatio))
-    {
-      LogError::getInstance().sysLog(DEBUG, "click on %s", (*it)->hostname.c_str());
-      wxToolTip::Enable(true);
-      this->SetToolTip((*it)->statusDetail);
-      return;
-    }
-  }
-  LogError::getInstance().sysLog(DEBUG, "Unset tooltip");
-  this->UnsetToolTip();
-}
-
-void StatusSchema::drawServer(wxPaintDC& dc, const boost::shared_ptr<server_t> server)
-{
-  wxRect r;
-  r.x = server->rect.x * wRatio;
-  r.y = server->rect.y * hRatio;
-  r.width = server->rect.width * wRatio;
-  r.height = server->rect.height * hRatio;
-  LogError::getInstance().sysLog(DEBUG, "draw rec(%u, %u, %u, %u) inside (%u, %u, %u, %u)", 
-                                 r.x, r.y, r.width, r.height,
-                                 0, 0, this->GetSize().GetWidth(), this->GetSize().GetHeight());
-
-  wxBrush brush = dc.GetBrush();
-  wxBrush brushTmp = brush;
-  switch (server->status)
-  {
-  case STATUS_WAITING:      brushTmp.SetColour(livecast_grey);     break;
-  case STATUS_INITIALIZING: brushTmp.SetColour(livecast_yellow);   break;
-  case STATUS_RUNNING:      brushTmp.SetColour(livecast_green);    break;
-  case STATUS_ERROR:        brushTmp.SetColour(livecast_red);      break;
-  case STATUS_UNKNOWN:      brushTmp.SetColour(livecast_darkGrey); break;
-  };
-  
-  dc.SetBrush(brushTmp);
-
-  dc.DrawRectangle(r);
-
-  std::ostringstream title;
-  switch (server->type)
-  {
-  case SERVER_STREAMDUP:     title << "STREAMDUP";     break;
-  case SERVER_MASTERBOX:     title << "MASTERBOX";     break;
-  case SERVER_STREAMER_RTMP: title << "STREAMER_RTMP"; break;
-  case SERVER_STREAMER_HLS:  title << "STREAMER_HLS";  break;
-  case SERVER_UNKNOWN:       title << "UNKNOWN TYPE";  break;
-  }
-  title << "\n" << server->hostname;
-  dc.DrawLabel(title.str(), r, wxALIGN_CENTRE);
-  dc.SetBrush(brush);
+//   LogError::getInstance().sysLog(ERROR, "");
 }
 
 void StatusSchema::drawLines(wxPaintDC& dc)
@@ -508,7 +571,12 @@ void StatusSchema::computeLink(const link_t& link, unsigned int& nb)
     wxColour colour(r, g, b);
     wxPenStyle style = (nb % 2 == 1) ? wxPENSTYLE_SOLID : wxPENSTYLE_DOT;
     std::ostringstream label;
-    label << (*dst)->protocol << ":" << (*dst)->port;
+    
+    if (pos == 1)
+    {
+      label << (*dst)->protocol << ":" << (*dst)->port;
+    }
+
     this->hLines.push_back(line_t(p1, p2, colour, style, false, ""));
     this->vLines.push_back(line_t(p2, p3, colour, style, false, ""));
     this->hLines.push_back(line_t(p3, p4, colour, style, true, label.str()));

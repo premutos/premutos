@@ -115,6 +115,9 @@ void LivecastStatus::onCheckStream(wxCommandEvent& ev)
     server->hostname = it->first;
     server->type = type;
     server->status = status;
+    server->statusDetail = it->first;
+    server->statusDetail += "\n";
+    server->statusDetail += "no status detail available";
     server->protocol = *(it->second.get_optional<std::string>("protocol"));
     server->port = *(it->second.get_optional<unsigned int>("port"));
     server->leaf = *(it->second.get_optional<bool>("leaf"));
