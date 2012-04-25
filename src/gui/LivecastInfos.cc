@@ -1,6 +1,7 @@
 #include "Util.hh"
 #include "LivecastInfos.hh"
 #include "LivecastListCtrl.hh"
+#include "LivecastTreeListCtrl.hh"
 #include "LivecastStatus.hh"
 #include "../lib/Log.hh"
 
@@ -128,7 +129,7 @@ LivecastInfos::LivecastInfos(wxWindow * parent)
     this->profiles->Bind(wxEVT_COMMAND_LIST_ITEM_ACTIVATED, &LivecastInfos::onProfilesListDblClicked, this, wxID_ANY);
 
     // servers
-    this->servers = new wxTreeListCtrl(this->noteBook, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_DEFAULT_STYLE | wxTR_HIDE_ROOT | wxTR_ROW_LINES);
+    this->servers = new LivecastTreeListCtrl(this->noteBook);
     this->servers->AddColumn("row");
     this->servers->AddColumn("type");
     this->servers->AddColumn("hostname");
@@ -197,9 +198,11 @@ std::list<boost::shared_ptr<ResultCallbackIntf> > LivecastInfos::setInfos(boost:
   const StreamInfos::servers_t& serv = streamInfos->getServers();
   for (unsigned int r = 0; r < 2; r++)
   {
+    const char * row = ((r == 0) ? "primary" : "backup");
+    wxTreeItemId rowItem = this->servers->AppendItem (root, row);
+    this->servers->SetItemBackgroundColour(rowItem, livecast_grey);
     for (unsigned int t = 0; t < 3; t++)
     {
-      const char * row = ((r == 0) ? "primary" : "backup");
       for (std::list<StreamInfos::server_t>::const_iterator it = serv[r][t].begin(); it != serv[r][t].end(); ++it)
       {
         const char * type = (((*it).type == StreamInfos::server_t::STREAM_DUP) ? "streamdup" : 
@@ -208,7 +211,7 @@ std::list<boost::shared_ptr<ResultCallbackIntf> > LivecastInfos::setInfos(boost:
                              ((*it).type == StreamInfos::server_t::STREAMER_HLS) ? "streamer hls" :
                              "unknown");
 
-        wxTreeItemId item = this->servers->AppendItem (root, row);
+        wxTreeItemId item = this->servers->AppendItem (rowItem, row);
 
         std::ostringstream portSS;
         std::ostringstream statusSS;
@@ -263,6 +266,10 @@ std::list<boost::shared_ptr<ResultCallbackIntf> > LivecastInfos::setInfos(boost:
         n++;
       }
     }
+    
+    // expand row
+    this->servers->Expand(rowItem);
+
   }
 
   // clean schema
@@ -281,7 +288,7 @@ std::list<boost::shared_ptr<ResultCallbackIntf> > LivecastInfos::setInfos(boost:
   this->backupStatusSchema = new LivecastStatus(this->noteBook, streamInfos, false);
   this->noteBook->InsertPage(3, this->backupStatusSchema, "backup schema", true);
 
-  // set selection on servers list
+  // set selection
   this->noteBook->SetSelection((this->currentSelectionPage < this->noteBook->GetPageCount()) ? this->currentSelectionPage : 0);
 
   boost::shared_ptr<LivecastStatusCallback> cb1(new LivecastStatusCallback(this->primaryStatusSchema));
@@ -297,6 +304,7 @@ void LivecastInfos::refresh()
   if (this->streamInfos && this->streamInfos->isModified())
   {
     this->setInfos(this->streamInfos);
+    this->servers->Refresh();
   }
 }
 

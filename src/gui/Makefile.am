@@ -17,6 +17,7 @@ liblivecast_admin_gui_la_SOURCES = \
 	LivecastServers.cc \
 	LivecastStatus.cc \
 	LivecastTaskBarIcon.cc \
+	LivecastTreeListCtrl.cc \
 	ResultCallback.cc \
 	StatusSchema.cc \
 	Util.cc \
