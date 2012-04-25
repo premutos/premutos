@@ -1,3 +1,4 @@
+#include "gui/Util.hh"
 #include "gui/StatusSchema.hh"
 #include "lib/Log.hh"
 
@@ -88,7 +89,7 @@ bool TestSchema::OnInit()
 //       std::cout << std::endl << "========" << std::endl;
 
       wxFrame * frame = new wxFrame(NULL, wxID_ANY, "test schema");
-      StatusSchema * statusSchema = new StatusSchema(frame);
+      StatusSchema * statusSchema = new StatusSchema(frame, 4);
       StatusSchemaLoader statusSchemaLoader;
       statusSchemaLoader.load3(statusSchema, schemaInfos);
       wxBoxSizer * box = new wxBoxSizer(wxHORIZONTAL);
@@ -99,7 +100,7 @@ bool TestSchema::OnInit()
     else
     {
       wxFrame * frame = new wxFrame(NULL, wxID_ANY, "test schema");
-      StatusSchema * statusSchema = new StatusSchema(frame);
+      StatusSchema * statusSchema = new StatusSchema(frame, 4);
       StatusSchemaLoader statusSchemaLoader;
       statusSchemaLoader.load1(statusSchema);
       wxBoxSizer * box = new wxBoxSizer(wxHORIZONTAL);
@@ -126,10 +127,11 @@ void StatusSchemaLoader::load1(StatusSchema * const statusSchema)
   boost::shared_ptr<StatusSchema::server_t> sd0(new StatusSchema::server_t);
   sd0->id = 0;
   sd0->hostname = "streamdup0.l3.kewego.int";
-  sd0->type = StatusSchema::SERVER_STREAMDUP;
+  sd0->type = "STREAMDUP";
+  sd0->colour = livecast_green;
+  sd0->column = 0;
   sd0->protocol = "udp multicast 224.10.10.10";
   sd0->port = 5555;
-  sd0->status = StatusSchema::STATUS_RUNNING;
   std::ostringstream streamdupStatusDetail;
   streamdupStatusDetail << "1 RUNNING;masterbox0.1.l3.kewego.int"
                         << "1 RUNNING;masterbox1.1.l3.kewego.int"
@@ -155,10 +157,20 @@ void StatusSchemaLoader::load1(StatusSchema * const statusSchema)
   mb3->hostname = "masterbox2.l3.kewego.int";
   mb4->hostname = "masterbox3.l3.kewego.int";
 
-  mb1->type = StatusSchema::SERVER_MASTERBOX;
-  mb2->type = StatusSchema::SERVER_MASTERBOX;
-  mb3->type = StatusSchema::SERVER_MASTERBOX;
-  mb4->type = StatusSchema::SERVER_MASTERBOX;
+  mb1->type = "MASTERBOX";
+  mb2->type = "MASTERBOX";
+  mb3->type = "MASTERBOX";
+  mb4->type = "MASTERBOX";
+
+  mb1->colour = livecast_grey;
+  mb2->colour = livecast_yellow;
+  mb3->colour = livecast_green;
+  mb4->colour = livecast_red;
+
+  mb1->column = 1;
+  mb2->column = 1;
+  mb3->column = 1;
+  mb4->column = 1;
 
   mb1->protocol = "tcp";
   mb2->protocol = "tcp";
@@ -169,11 +181,6 @@ void StatusSchemaLoader::load1(StatusSchema * const statusSchema)
   mb2->port = 2991;
   mb3->port = 2991;
   mb4->port = 2991;
-
-  mb1->status = StatusSchema::STATUS_WAITING;
-  mb2->status = StatusSchema::STATUS_INITIALIZING;
-  mb3->status = StatusSchema::STATUS_RUNNING;
-  mb4->status = StatusSchema::STATUS_ERROR;
 
   std::ostringstream mb1StatusDetail;
   mb1StatusDetail << "1 WAITING" ;
@@ -222,10 +229,20 @@ void StatusSchemaLoader::load1(StatusSchema * const statusSchema)
   sr7->hostname = "streamer2.l3.kewego.int";
   sr8->hostname = "streamer3.l3.kewego.int";
 
-  sr5->type = StatusSchema::SERVER_STREAMER_RTMP;
-  sr6->type = StatusSchema::SERVER_STREAMER_RTMP;
-  sr7->type = StatusSchema::SERVER_STREAMER_RTMP;
-  sr8->type = StatusSchema::SERVER_STREAMER_RTMP;
+  sr5->type = "STREAMER_RTMP";
+  sr6->type = "STREAMER_RTMP";
+  sr7->type = "STREAMER_RTMP";
+  sr8->type = "STREAMER_RTMP";
+
+  sr5->colour = livecast_grey;
+  sr6->colour = livecast_yellow;
+  sr7->colour = livecast_green;
+  sr8->colour = livecast_red;
+
+  sr5->colour = 2;
+  sr6->colour = 2;
+  sr7->colour = 2;
+  sr8->colour = 2;
 
   sr5->protocol = "tcp";
   sr6->protocol = "tcp";
@@ -236,11 +253,6 @@ void StatusSchemaLoader::load1(StatusSchema * const statusSchema)
   sr6->port = 1936;
   sr7->port = 1936;
   sr8->port = 1936;
-
-  sr5->status = StatusSchema::STATUS_WAITING;
-  sr6->status = StatusSchema::STATUS_INITIALIZING;
-  sr7->status = StatusSchema::STATUS_RUNNING;
-  sr8->status = StatusSchema::STATUS_ERROR;
 
   std::ostringstream sr5StatusDetail;
   sr5StatusDetail << "1 WAITING" ;
@@ -289,10 +301,20 @@ void StatusSchemaLoader::load1(StatusSchema * const statusSchema)
   sh11->hostname = "streamer2.l3.kewego.int";
   sh12->hostname = "streamer3.l3.kewego.int";
 
-  sh09->type = StatusSchema::SERVER_STREAMER_HLS;
-  sh10->type = StatusSchema::SERVER_STREAMER_HLS;
-  sh11->type = StatusSchema::SERVER_STREAMER_HLS;
-  sh12->type = StatusSchema::SERVER_STREAMER_HLS;
+  sh09->type = "STREAMER_HLS";
+  sh10->type = "STREAMER_HLS";
+  sh11->type = "STREAMER_HLS";
+  sh12->type = "STREAMER_HLS";
+
+  sh09->colour = livecast_grey;
+  sh10->colour = livecast_yellow;
+  sh11->colour = livecast_green;
+  sh12->colour = livecast_red;
+
+  sh09->colour = 3;
+  sh10->colour = 3;
+  sh11->colour = 3;
+  sh12->colour = 3;
 
   sh09->protocol = "http";
   sh10->protocol = "http";
@@ -303,11 +325,6 @@ void StatusSchemaLoader::load1(StatusSchema * const statusSchema)
   sh10->port = 80;
   sh11->port = 80;
   sh12->port = 80;
-
-  sh09->status = StatusSchema::STATUS_WAITING;
-  sh10->status = StatusSchema::STATUS_INITIALIZING;
-  sh11->status = StatusSchema::STATUS_RUNNING;
-  sh12->status = StatusSchema::STATUS_ERROR;
 
   std::ostringstream sh09StatusDetail;
   sh09StatusDetail << "1 WAITING" ;
@@ -400,10 +417,11 @@ void StatusSchemaLoader::load2(StatusSchema * const statusSchema)
   boost::shared_ptr<StatusSchema::server_t> sd0(new StatusSchema::server_t);
   sd0->id = 0;
   sd0->hostname = "streamdup0.l3.kewego.int";
-  sd0->type = StatusSchema::SERVER_STREAMDUP;
+  sd0->type = "STREAMDUP";
+  sd0->column = 0;
   sd0->protocol = "udp multicast 224.10.10.10";
   sd0->port = 5555;
-  sd0->status = StatusSchema::STATUS_RUNNING;
+  sd0->colour = livecast_green;
   statusSchema->addServer(sd0);
 
   //
@@ -417,8 +435,11 @@ void StatusSchemaLoader::load2(StatusSchema * const statusSchema)
   mb1->hostname = "masterbox0.l3.kewego.int";
   mb2->hostname = "masterbox2.l3.kewego.int";
 
-  mb1->type = StatusSchema::SERVER_MASTERBOX;
-  mb2->type = StatusSchema::SERVER_MASTERBOX;
+  mb1->type = "MASTERBOX";
+  mb2->type = "MASTERBOX";
+
+  mb1->column = 1;
+  mb2->column = 1;
 
   mb1->protocol = "tcp";
   mb2->protocol = "tcp";
@@ -426,8 +447,8 @@ void StatusSchemaLoader::load2(StatusSchema * const statusSchema)
   mb1->port = 2991;
   mb2->port = 2991;
 
-  mb1->status = StatusSchema::STATUS_WAITING;
-  mb2->status = StatusSchema::STATUS_INITIALIZING;
+  mb1->colour = livecast_grey;
+  mb2->colour = livecast_yellow;
 
   statusSchema->addServer(mb1);
   statusSchema->addServer(mb2);
@@ -443,8 +464,11 @@ void StatusSchemaLoader::load2(StatusSchema * const statusSchema)
   sr5->hostname = "streamer0.l3.kewego.int";
   sr6->hostname = "streamer1.l3.kewego.int";
 
-  sr5->type = StatusSchema::SERVER_STREAMER_RTMP;
-  sr6->type = StatusSchema::SERVER_STREAMER_RTMP;
+  sr5->type = "STREAMER_RTMP";
+  sr6->type = "STREAMER_RTMP";
+
+  sr5->column = 2;
+  sr6->column = 2;
 
   sr5->protocol = "tcp";
   sr6->protocol = "tcp";
@@ -452,8 +476,8 @@ void StatusSchemaLoader::load2(StatusSchema * const statusSchema)
   sr5->port = 1936;
   sr6->port = 1936;
 
-  sr5->status = StatusSchema::STATUS_WAITING;
-  sr6->status = StatusSchema::STATUS_INITIALIZING;
+  sr5->colour = livecast_grey;
+  sr6->colour = livecast_yellow;
 
   statusSchema->addServer(sr5);
   statusSchema->addServer(sr6);
@@ -469,8 +493,11 @@ void StatusSchemaLoader::load2(StatusSchema * const statusSchema)
   sh09->hostname = "streamer0.l3.kewego.int";
   sh10->hostname = "streamer1.l3.kewego.int";
 
-  sh09->type = StatusSchema::SERVER_STREAMER_HLS;
-  sh10->type = StatusSchema::SERVER_STREAMER_HLS;
+  sh09->type = "STREAMER_HLS";
+  sh10->type = "STREAMER_HLS";
+
+  sh09->column = 3;
+  sh10->column = 3;
 
   sh09->protocol = "http";
   sh10->protocol = "http";
@@ -478,8 +505,8 @@ void StatusSchemaLoader::load2(StatusSchema * const statusSchema)
   sh09->port = 80;
   sh10->port = 80;
 
-  sh09->status = StatusSchema::STATUS_WAITING;
-  sh10->status = StatusSchema::STATUS_INITIALIZING;
+  sh09->colour = livecast_grey;
+  sh10->colour = livecast_yellow;
 
   statusSchema->addServer(sh09);
   statusSchema->addServer(sh10);
@@ -555,28 +582,28 @@ void StatusSchemaLoader::load3(StatusSchema * const statusSchema, const boost::s
     const std::string typeStr = it->second.get<std::string>("type");
     const std::string statusStr = it->second.get<std::string>("result");
 
-    StatusSchema::type_t type = ((typeStr == "streamdup") ? StatusSchema::SERVER_STREAMDUP :
-                                 (typeStr == "masterbox") ? StatusSchema::SERVER_MASTERBOX :
-                                 (typeStr == "rtmp streamer") ? StatusSchema::SERVER_STREAMER_RTMP :
-                                 (typeStr == "hls streamer") ? StatusSchema::SERVER_STREAMER_HLS :
-                                 StatusSchema::SERVER_UNKNOWN) ;
-    StatusSchema::status_t status = ((statusStr.find("WAITING") != std::string::npos) ? StatusSchema::STATUS_WAITING :
-                                     (statusStr.find("INITIALIZING") != std::string::npos) ? StatusSchema::STATUS_INITIALIZING :
-                                     (statusStr.find("RUNNING") != std::string::npos) ? StatusSchema::STATUS_RUNNING :
-                                     (statusStr.find("ERROR") != std::string::npos) ? StatusSchema::STATUS_ERROR :
-                                     StatusSchema::STATUS_UNKNOWN) ;
+    unsigned int column = ((typeStr == "streamdup") ? 0 :
+                           (typeStr == "masterbox") ? 1 :
+                           (typeStr == "rtmp streamer") ? 2 :
+                           (typeStr == "hls streamer") ? 3 :
+                           4) ;
+    wxColour colour = ((statusStr.find("WAITING") != std::string::npos) ? livecast_grey :
+                       (statusStr.find("INITIALIZING") != std::string::npos) ? livecast_yellow :
+                       (statusStr.find("RUNNING") != std::string::npos) ? livecast_green :
+                       (statusStr.find("ERROR") != std::string::npos) ? livecast_red :
+                       livecast_darkGrey) ;
 
     boost::shared_ptr<StatusSchema::server_t> server(new StatusSchema::server_t);
     server->id = id++;
     server->hostname = it->first;
-    server->type = type;
-    server->status = status;
+    server->type = typeStr;
+    server->column = column;
+    server->colour = colour;
     server->protocol = it->second.get<std::string>("protocol");
     server->port = it->second.get<unsigned int>("port");
     server->leaf = it->second.get<bool>("leaf");
    
-    LogError::getInstance().sysLog(ERROR, "add server : [id:%d] [host:%s] [type:%d] [status:%d] [protocol:%s] [port:%u] [leaf:%d]",
-                                   server->id, server->hostname.c_str(), server->type, server->status, server->protocol.c_str(), server->port, server->leaf);
+    LogError::getInstance().sysLog(ERROR, "add server : [id:%d] [host:%s] [type:%s]", server->id, server->hostname.c_str(), server->type.c_str());
     statusSchema->addServer(server);
   }
   statusSchema->linkAllServers();
