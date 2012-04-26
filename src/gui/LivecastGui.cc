@@ -44,7 +44,7 @@ LivecastGui::LivecastGui(boost::shared_ptr<GuiConfiguration> cfg, boost::shared_
   if (wxTaskBarIcon::IsAvailable())
   {
     this->taskBar = new LivecastTaskBarIcon(this);
-    taskBar->SetIcon(wxIcon(wxT("res/kitd_noc_logo.png")), "noc admin");
+    taskBar->SetIcon(wxIcon(wxT("res/livecast_admin_logo.png")), "noc admin");
   }
   else
   {
