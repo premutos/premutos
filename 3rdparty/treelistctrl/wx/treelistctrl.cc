@@ -3636,7 +3636,7 @@ void wxTreeListMainWindow::PaintLevel (wxTreeListItem *item, wxDC &dc,
                 }
 #else
                 wxRect rect (x-m_btnWidth2, y_mid-m_btnHeight2, m_btnWidth, m_btnHeight);
-                int flag = item->IsExpanded()? wxCONTROL_EXPANDED: 0;
+                int flag = item->IsExpanded() ? (int)wxCONTROL_EXPANDED: 0;
                 wxRendererNative::GetDefault().DrawTreeItemButton (this, dc, rect, flag);
 #endif
 
@@ -4109,7 +4109,7 @@ void wxTreeListMainWindow::OnRenameAccept(bool isCancelled) {
     }
 }
 
-void wxTreeListMainWindow::EndEdit(bool isCancelled) {
+void wxTreeListMainWindow::EndEdit(bool WXUNUSED(isCancelled)) {
     if (m_editControl) { m_editControl->EndEdit(true); }
 }
 
@@ -4419,7 +4419,7 @@ void wxTreeListMainWindow::OnScroll (wxScrollWinEvent& event) {
 
     // TODO
 #if defined(__WXGTK__) && !defined(__WXUNIVERSAL__)
-    wxScrolledWindow::OnScroll(event);
+    wxScrolledWindow::HandleOnScroll(event);
 #else
     HandleOnScroll( event );
 #endif

@@ -5,8 +5,6 @@
 #include "LivecastStatus.hh"
 #include "../lib/Log.hh"
 
-#include <wx/vscroll.h>
-
 using namespace livecast;
 using namespace gui;
 using namespace monitor;
@@ -20,6 +18,7 @@ LivecastInfos::LivecastInfos(wxWindow * parent)
   // prepare infos
   {
     this->infos = new wxScrolledWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL | wxHSCROLL);
+    // this->infos->SetScrollbars(10, 10, 100, 100);
 
     wxPanel * labelPanel = new wxPanel(this->infos, wxID_ANY);
     wxPanel * valuePanel = new wxPanel(this->infos, wxID_ANY);

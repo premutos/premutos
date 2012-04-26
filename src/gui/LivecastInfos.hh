@@ -5,6 +5,7 @@
 #include <wx/aui/auibook.h>
 #include <wx/listctrl.h>
 #include <wx/treelistctrl.hh>
+#include <wx/vscroll.h>
 
 #include "../monitor/ResultCallbackIntf.hh"
 #include "../monitor/StreamInfos.hh"
@@ -29,7 +30,7 @@ protected:
 
 private:
   wxAuiNotebook * noteBook;
-  wxPanel * infos;
+  wxScrolledWindow * infos;
   LivecastListCtrl * profiles;
   wxTreeListCtrl * servers;
   LivecastStatus * primaryStatusSchema;

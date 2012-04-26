@@ -130,10 +130,9 @@ void StreamInfos::status(boost::shared_ptr<ResultCallbackIntf> resultCb,
               messageStr = (*it).substr(pos + 1);
             }
       
-            unsigned int id = 0;
             try 
             {
-              id = boost::lexical_cast<unsigned int>(streamId.c_str());
+              boost::lexical_cast<unsigned int>(streamId.c_str());
             }
             catch (const boost::bad_lexical_cast& ex)
             {

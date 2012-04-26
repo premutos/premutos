@@ -61,7 +61,7 @@ wxString LivecastListCtrlVirtual::OnGetItemText(long item, long column) const
 {
   LogError::getInstance().sysLog(DEBUG, "ask value for (%d, %d)", item, column);
 
-  const char * value;
+  const char * value = "";
   std::ostringstream oss;
   boost::shared_ptr<MonitorConfiguration> cfg = this->monitor->getConfiguration();
   MonitorConfiguration::map_streams_infos_t::const_iterator it = cfg->getStreamsInfos().begin();
@@ -194,12 +194,15 @@ void LivecastResult::onStreamListUpdate(wxCommandEvent& WXUNUSED(event))
     for (MonitorConfiguration::map_streams_infos_t::const_iterator it = cfg->getStreamsInfos().begin(); it != cfg->getStreamsInfos().end(); ++it)
     {
       n = std::distance(MonitorConfiguration::map_streams_infos_t::const_iterator(cfg->getStreamsInfos().begin()), it);
-      if (n >= this->list->GetItemCount())
+      if ((int)n >= this->list->GetItemCount())
       {
         wxListItem item;
         item.SetId(n);
         item.SetData(it->second->getId());
-        unsigned int n2 = this->list->InsertItem(item);
+#ifndef NDEBUG        
+        unsigned int n2 = 
+#endif
+          this->list->InsertItem(item);
         assert(n == n2);
       }
       else
@@ -208,7 +211,7 @@ void LivecastResult::onStreamListUpdate(wxCommandEvent& WXUNUSED(event))
       }
       this->updateItem(it);
     }
-    for (unsigned int i = n + 1; i < this->list->GetItemCount(); i++)
+    for (int i = n + 1; i < this->list->GetItemCount(); i++)
     {
       this->list->DeleteItem(i);
     }

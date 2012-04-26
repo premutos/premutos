@@ -71,7 +71,7 @@ void StatusSchema::wxServer::refresh()
   LogError::getInstance().sysLog(DEBUG, "length of %s : %d (%d * %d) >? %d", 
                                  this->infos->hostname.c_str(), length, this->infos->hostname.length(), pixelSize.GetWidth(), this->GetSize().GetWidth());
 
-  if (length > this->GetSize().GetWidth())
+  if ((int)length > this->GetSize().GetWidth())
   {
     float pixelRatio = (float)this->GetSize().GetWidth() / (float)length;
     LogError::getInstance().sysLog(DEBUG, "ratio : %f", pixelRatio);
@@ -137,9 +137,9 @@ void StatusSchema::addServer(boost::shared_ptr<StatusSchema::server_t> s)
   LogError::getInstance().sysLog(DEBUG, "add server [%d;%d;%d;%d]",
                                  s->rect.x * this->wRatio, s->rect.y * this->hRatio, 
                                  s->rect.width * this->wRatio, s->rect.height * this->hRatio);
-  wxServer * server = new wxServer(this, s, 
-                                   wxPoint(s->rect.x * this->wRatio, s->rect.y * this->hRatio), 
-                                   wxSize(s->rect.width * this->wRatio, s->rect.height * this->hRatio));
+  new wxServer(this, s, 
+               wxPoint(s->rect.x * this->wRatio, s->rect.y * this->hRatio), 
+               wxSize(s->rect.width * this->wRatio, s->rect.height * this->hRatio));
 }
 
 void StatusSchema::addLink(const StatusSchema::link_t& l)

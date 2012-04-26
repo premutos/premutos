@@ -259,16 +259,16 @@ void LivecastGui::onAddView(wxCommandEvent& WXUNUSED(ev))
   LogError::getInstance().sysLog(ERROR, "add view");
 }
 
-void LivecastGui::onSwitchView(wxCommandEvent& ev)
+void LivecastGui::onSwitchView(wxCommandEvent& WXUNUSED(ev))
 {
   LogError::getInstance().sysLog(DEBUG, "switch view");
   for (std::list<const wxMenuItem *>::const_iterator it = this->views.begin(); it != this->views.end(); ++it)
   {
-    LogError::getInstance().sysLog(DEBUG, "%s is %s", (*it)->GetText().ToStdString().c_str(), (*it)->IsChecked() ? "checked" : "not checked");
+    // LogError::getInstance().sysLog(DEBUG, "%s is %s", (*it)->GetText().ToStdString().c_str(), (*it)->IsChecked() ? "checked" : "not checked");
     if ((*it)->IsChecked())
     {
-      this->SetTitle(std::string(cfg->getMainWindowName()) + " " + (*it)->GetText());
-      this->monitor->getConfiguration()->setAccessKey((*it)->GetText().ToStdString().c_str());
+      // this->SetTitle(std::string(cfg->getMainWindowName()) + " " + (*it)->GetText()); // fixme 
+      // this->monitor->getConfiguration()->setAccessKey((*it)->GetText().ToStdString().c_str()); // fixme
       this->monitor->getConfiguration()->load();
       this->monitor->refresh(this->resultCb);
     }

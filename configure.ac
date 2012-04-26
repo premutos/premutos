@@ -8,8 +8,8 @@ AM_CONFIG_HEADER(config.h)
 
 #
 #
-# AC_PROG_CC([gcc46 gcc cc])
-# AC_PROG_CXX([g++46 g++ cpp])
+AC_PROG_CC([gcc46 gcc cc])
+AC_PROG_CXX([g++46 g++ cpp])
 AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_INSTALL
@@ -43,7 +43,7 @@ AC_ARG_WITH([memory-check],
 AC_ARG_ENABLE([debug], 
               AC_HELP_STRING([--enable-debug], [compile with debug option]), 
               [CXXFLAGS="$CXXFLAGS -W -Wall -ggdb -O0 -D__DEBUG__ -DGLIBCXX_FORCE_NEW"], 
-              [CXXFLAGS="$CXXFLAGS -W -Wall -Werror -ggdb -O2 -DNDEBUG"])
+              [CXXFLAGS="$CXXFLAGS -W -Wall -Werror -s -O2 -DNDEBUG"])
 
 #
 # boost first
